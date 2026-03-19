@@ -47,7 +47,11 @@ public enum ErrorCode implements BaseCode {
     // BUSINESS
     INVALID_STATE(400, "INVALID_STATE", "잘못된 상태입니다."),
     NOT_ALLOWED_ACTION(403, "NOT_ALLOWED_ACTION", "수행할 수 없는 작업입니다."),
-    ALREADY_PROCESSED(409, "ALREADY_PROCESSED", "이미 처리된 요청입니다.");
+    ALREADY_PROCESSED(409, "ALREADY_PROCESSED", "이미 처리된 요청입니다."),
+
+    // DISCLOSURE
+    DISCLOSURE_NOT_FOUND(404, "DISCLOSURE404", "해당 공시를 찾을 수 없습니다."),
+    COMPANY_NOT_FOUND(404, "COMPANY404", "해당 기업을 찾을 수 없습니다.");
 
     private final int httpStatus;
     private final String code;

@@ -25,7 +25,7 @@ public class DisclosuresServiceImpl implements DisclosuresService {
 
     // 1. 공시 목록 조회
     @Override
-    public Page<DisclosuresResponseDTO.DisclosureListResponse> getDisclosureList(UUID companyId, int page, int size) {
+    public Page<DisclosuresResponseDTO.DisclosureListResponse> getDisclosureList(Long companyId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("disclosedAt").descending());
 
         Page<Disclosures> disclosures = (companyId != null)
@@ -37,15 +37,15 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                 .dartId(d.getDartId())
                 .title(d.getTitle())
                 .disclosedAt(d.getDisclosedAt().toString())
-                //.companyId(d.getCompany().getId())
-                //.companyName(d.getCompany().getName())
-                //.ticker(d.getCompany().getTicker())
+                .companyId(d.getCompany().getId())
+                .companyName(d.getCompany().getName())
+                .ticker(d.getCompany().getTicker())
                 .build());
     }
 
     // 2. 공시 상세 조회
     @Override
-    public DisclosuresResponseDTO.DisclosureDetailResponse getDisclosureDetail(UUID disclosureId) {
+    public DisclosuresResponseDTO.DisclosureDetailResponse getDisclosureDetail(Long disclosureId) {
         Disclosures disclosure = disclosuresRepository.findById(disclosureId)
                 .orElseThrow(() -> new BriefinException(ErrorCode.DISCLOSURE_NOT_FOUND));
 
@@ -55,15 +55,15 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                 .title(disclosure.getTitle())
                 .disclosedAt(disclosure.getDisclosedAt().toString())
                 .url(disclosure.getUrl())
-                //.companyId(disclosure.getCompany().getId())
-                //.companyName(disclosure.getCompany().getName())
-                //.ticker(disclosure.getCompany().getTicker())
+                .companyId(disclosure.getCompany().getId())
+                .companyName(disclosure.getCompany().getName())
+                .ticker(disclosure.getCompany().getTicker())
                 .build();
     }
 
     // 3. 기업별 최근 공시 조회
     @Override
-    public List<DisclosuresResponseDTO.DisclosureRecentResponse> getRecentDisclosures(UUID companyId) {
+    public List<DisclosuresResponseDTO.DisclosureRecentResponse> getRecentDisclosures(Long companyId) {
         List<Disclosures> disclosures = disclosuresRepository
                 .findTop3ByCompanyIdOrderByDisclosedAtDesc(companyId);
 

@@ -11,11 +11,11 @@ import java.util.UUID;
 public interface DisclosuresRepository extends JpaRepository<Disclosures, UUID> {
 
     // 1. 기업ID로 목록 조회 (페이징)
-    Page<Disclosures> findByCompanyId(UUID companyId, Pageable pageable);
+    Page<Disclosures> findByCompanyId(Long companyId, Pageable pageable);
 
     // 1. 전체 목록 조회 (페이징)
     Page<Disclosures> findAll(Pageable pageable);
 
     // 3. 기업별 최근 공시 3개
-    List<Disclosures> findTop3ByCompanyIdOrderByDisclosedAtDesc(UUID companyId);
+    List<Disclosures> findTop3ByCompanyIdOrderByDisclosedAtDesc(Long companyId);
 }

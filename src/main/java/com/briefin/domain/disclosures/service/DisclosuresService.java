@@ -8,9 +8,9 @@ import java.util.UUID;
 
 public interface DisclosuresService {
 
-    Page<DisclosuresResponseDTO.DisclosureListResponse> getDisclosureList(UUID companyId, int page, int size);
+    Page<DisclosuresResponseDTO.DisclosureListResponse> getDisclosureList(Long companyId, int page, int size);
 
-    DisclosuresResponseDTO.DisclosureDetailResponse getDisclosureDetail(UUID disclosureId);
+    DisclosuresResponseDTO.DisclosureDetailResponse getDisclosureDetail(Long disclosureId);
 
-    List<DisclosuresResponseDTO.DisclosureRecentResponse> getRecentDisclosures(UUID companyId);
+    List<DisclosuresResponseDTO.DisclosureRecentResponse> getRecentDisclosures(Long companyId);
 }

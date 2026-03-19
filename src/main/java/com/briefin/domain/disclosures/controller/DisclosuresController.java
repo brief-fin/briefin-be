@@ -21,7 +21,7 @@ public class DisclosuresController {
     // 1. 공시 목록 조회
     @GetMapping
     public ResponseEntity<ApiResponse<Page<DisclosuresResponseDTO.DisclosureListResponse>>> getDisclosureList(
-            @RequestParam(required = false) UUID companyId,
+            @RequestParam(required = false) Long companyId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
@@ -33,7 +33,7 @@ public class DisclosuresController {
     // 2. 공시 상세 조회
     @GetMapping("/{disclosureId}")
     public ResponseEntity<ApiResponse<DisclosuresResponseDTO.DisclosureDetailResponse>> getDisclosureDetail(
-            @PathVariable UUID disclosureId
+            @PathVariable Long disclosureId
     ) {
         DisclosuresResponseDTO.DisclosureDetailResponse result =
                 disclosuresService.getDisclosureDetail(disclosureId);
@@ -43,7 +43,7 @@ public class DisclosuresController {
     // 3. 기업별 최근 공시 조회
     @GetMapping("/recent")
     public ResponseEntity<ApiResponse<List<DisclosuresResponseDTO.DisclosureRecentResponse>>> getRecentDisclosures(
-            @RequestParam UUID companyId
+            @RequestParam Long companyId
     ) {
         List<DisclosuresResponseDTO.DisclosureRecentResponse> result =
                 disclosuresService.getRecentDisclosures(companyId);

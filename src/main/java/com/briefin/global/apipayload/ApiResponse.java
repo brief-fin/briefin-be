@@ -16,10 +16,6 @@ public record ApiResponse<T>(
         return of(true, SuccessCode.OK, result);
     }
 
-    public static <T> ApiResponse<T> success(SuccessCode successCode, T result) {
-        return of(true, successCode, result);
-    }
-
     public static ApiResponse<Void> error(ErrorCode errorCode) {
         return of(false, errorCode, null);
     }

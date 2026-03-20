@@ -12,5 +12,9 @@ public class DartListResponseDTO {
         private String status;
         private String message;
         private List<DisclosureItem> list;
+        private int totalCount;
+        private int totalPage;
+        private int pageNo;
+        private int pageCount;
     }
 }

@@ -1,5 +1,6 @@
 package com.briefin.domain.disclosures.client;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -12,15 +13,15 @@ import java.util.Map;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class ChatGptClient {
 
     @Value("${openai.api.key}")
     private String openAiKey;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     public String summarize(String rawText) {
-        // 토큰 제한 대비 앞 3000자만 사용
         String truncated = rawText.length() > 3000
                 ? rawText.substring(0, 3000) + "..."
                 : rawText;
@@ -52,13 +53,29 @@ public class ChatGptClient {
                     Map.class
             );
 
+            // null 체크 추가
+            if (response.getBody() == null) {
+                log.error("ChatGPT 응답 body가 null입니다.");
+                return null;
+            }
+
             List<Map> choices = (List<Map>) response.getBody().get("choices");
+            if (choices == null || choices.isEmpty()) {
+                log.error("ChatGPT 응답 choices가 비어있습니다.");
+                return null;
+            }
+
             Map message = (Map) choices.get(0).get("message");
+            if (message == null) {
+                log.error("ChatGPT 응답 message가 null입니다.");
+                return null;
+            }
+
             return (String) message.get("content");
 
         } catch (Exception e) {
             log.error("ChatGPT 요약 실패: {}", e.getMessage());
-            return null;  // 실패해도 공시 저장은 계속 진행
+            return null;
         }
     }
 }

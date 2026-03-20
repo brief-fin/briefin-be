@@ -19,6 +19,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -61,13 +62,19 @@ public class DartApiClient {
             String stockCode = el.getElementsByTagName("stock_code").item(0).getTextContent().trim();
 
             if (stockCode.isEmpty()) continue;
-            if (corpRepository.existsByCorpCode(corpCode)) continue;
 
-            corpRepository.save(Corp.builder()
-                    .corpCode(corpCode)
-                    .corpName(corpName)
-                    .stockCode(stockCode)
-                    .build());
+            // skip 대신 upsert로 변경
+            corpRepository.findByCorpCode(corpCode).ifPresentOrElse(
+                    existing -> {
+                        existing.update(corpName, stockCode);
+                        corpRepository.save(existing);
+                    },
+                    () -> corpRepository.save(Corp.builder()
+                            .corpCode(corpCode)
+                            .corpName(corpName)
+                            .stockCode(stockCode)
+                            .build())
+            );
         }
     }
 
@@ -106,29 +113,55 @@ public class DartApiClient {
         }
     }
 
-    // ⑤ 공통 목록 조회
+    // ⑤ 공통 목록 조회 (페이지네이션)
     private List<DisclosureItem> fetchList(String corpCode, String startDate, String endDate) {
-        UriComponentsBuilder builder = UriComponentsBuilder
-                .fromHttpUrl("https://opendart.fss.or.kr/api/list.json")
-                .queryParam("crtfc_key", dartApiKey)
-                .queryParam("bgn_de", startDate)
-                .queryParam("end_de", endDate)
-                .queryParam("page_no", 1)
-                .queryParam("page_count", 100);
+        List<DisclosureItem> allItems = new ArrayList<>();
+        int pageNo = 1;
 
-        if (corpCode != null) {
-            builder.queryParam("corp_code", corpCode);
+        while (true) {
+            UriComponentsBuilder builder = UriComponentsBuilder
+                    .fromHttpUrl("https://opendart.fss.or.kr/api/list.json")
+                    .queryParam("crtfc_key", dartApiKey)
+                    .queryParam("bgn_de", startDate)
+                    .queryParam("end_de", endDate)
+                    .queryParam("page_no", pageNo)
+                    .queryParam("page_count", 100);
+
+            if (corpCode != null) {
+                builder.queryParam("corp_code", corpCode);
+            }
+
+            DartListResponseDTO.DartListResponse response = restTemplate.getForObject(
+                    builder.toUriString(), DartListResponseDTO.DartListResponse.class
+            );
+
+            if (response == null) {
+                throw new RuntimeException("DART API 응답이 없습니다.");
+            }
+
+            // no-data는 정상 (조회 결과 없음)
+            if ("013".equals(response.getStatus())) {
+                log.info("조회된 공시가 없습니다.");
+                break;
+            }
+
+            // 그 외 비-000은 실제 오류 (잘못된 API 키, rate limit 등)
+            if (!"000".equals(response.getStatus())) {
+                throw new RuntimeException("DART API 오류 [" + response.getStatus() + "]: " + response.getMessage());
+            }
+
+            List<DisclosureItem> items = response.getList();
+            if (items == null || items.isEmpty()) break;
+
+            allItems.addAll(items);
+            log.info("공시 목록 조회 - page: {}/{}, 누적: {}건",
+                    pageNo, response.getTotalPage(), allItems.size());
+
+            if (pageNo >= response.getTotalPage()) break;
+
+            pageNo++;
         }
 
-        DartListResponseDTO.DartListResponse response = restTemplate.getForObject(
-                builder.toUriString(), DartListResponseDTO.DartListResponse.class
-        );
-
-        if (response == null || !"000".equals(response.getStatus())) {
-            log.error("DART API 오류: {}", response != null ? response.getMessage() : "응답 없음");
-            return List.of();
-        }
-
-        return response.getList() != null ? response.getList() : List.of();
+        return allItems;
     }
 }

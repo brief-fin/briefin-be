@@ -55,18 +55,19 @@ public class DartApiClient {
     }
 
     private void parseAndSaveCorpCodes(byte[] xmlBytes) throws Exception {
-        DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
         org.w3c.dom.Document doc = builder.parse(new ByteArrayInputStream(xmlBytes));
         NodeList list = doc.getElementsByTagName("list");
-
         for (int i = 0; i < list.getLength(); i++) {
             Element el = (Element) list.item(i);
-            String corpCode  = el.getElementsByTagName("corp_code").item(0).getTextContent().trim();
-            String corpName  = el.getElementsByTagName("corp_name").item(0).getTextContent().trim();
+            String corpCode = el.getElementsByTagName("corp_code").item(0).getTextContent().trim();
+            String corpName = el.getElementsByTagName("corp_name").item(0).getTextContent().trim();
             String stockCode = el.getElementsByTagName("stock_code").item(0).getTextContent().trim();
-
             if (stockCode.isEmpty()) continue;
-
             // skip 대신 upsert로 변경
             companiesRepository.findByCorpCode(corpCode).ifPresentOrElse(
                     existing -> {
@@ -74,6 +75,8 @@ public class DartApiClient {
                         companiesRepository.save(existing);
                     },
                     () -> companiesRepository.save(Companies.builder()
+                            .name(corpName)
+                            .ticker(stockCode)
                             .corpCode(corpCode)
                             .corpName(corpName)
                             .stockCode(stockCode)

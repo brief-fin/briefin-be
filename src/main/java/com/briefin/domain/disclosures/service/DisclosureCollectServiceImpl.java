@@ -52,7 +52,6 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
             }
 
             Companies company = companiesRepository.findByCorpCode(item.getCorp_code())
-                    .flatMap(corp -> companiesRepository.findByTicker(corp.getStockCode()))
                     .orElse(null);
 
             if (company == null) {

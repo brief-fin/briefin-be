@@ -2,8 +2,10 @@ package com.briefin.domain.users.controller;
 
 import com.briefin.domain.users.dto.ScrapNewsResponseDto;
 import com.briefin.domain.users.dto.UserResponseDto;
+import com.briefin.domain.users.dto.WatchlistResponseDto;
 import com.briefin.domain.users.service.ScrapsService;
 import com.briefin.domain.users.service.UsersService;
+import com.briefin.domain.users.service.WatchlistService;
 import com.briefin.global.apipayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import java.util.UUID;
 public class UsersController {
     private final UsersService usersService;
     private final ScrapsService scrapsService;
+    private final WatchlistService watchlistService;
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponseDto>> getMyInfo(
@@ -32,5 +35,12 @@ public class UsersController {
             @RequestParam(defaultValue = "10") int size
     ) {
         return ResponseEntity.ok(ApiResponse.success(scrapsService.getScrappedNews(userId, page, size)));
+    }
+
+    @GetMapping("/watchlist")
+    public ResponseEntity<ApiResponse<WatchlistResponseDto>> getWatchlist(
+            @RequestParam UUID userId //JWT 인증 구현 전 임시
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(watchlistService.getWatchlist(userId)));
     }
 }

@@ -41,6 +41,9 @@ dependencies {
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
 	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 	implementation("me.paulschwarz:spring-dotenv:2.5.4")
+	implementation("org.jsoup:jsoup:1.17.2")
+	implementation("com.pgvector:pgvector:0.1.6")
+	implementation("org.hibernate.orm:hibernate-vector:6.6.13.Final")
 }
 
 tasks.withType<Test> {

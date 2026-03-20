@@ -1,20 +1,23 @@
 package com.briefin.domain.users.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import java.util.UUID;
+import com.briefin.global.common.BaseEntity;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Builder
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
-public class Users {
+
+public class Users extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+    @Column(nullable = false, unique = true)
+    private String email;
+    @Column(nullable = false)
+    private String password;
 }

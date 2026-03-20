@@ -4,31 +4,28 @@ import com.briefin.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-
 @Builder
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
-@Table(name = "news")
-public class News extends BaseEntity {
+@Table(name = "news_summaries")
+public class NewsSummary extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 500)
-    private String title;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "news_id", nullable = false, unique = true)
+    private News news;
 
     @Column(columnDefinition = "TEXT")
-    private String content;
+    private String summaryLine;
 
-    @Column(length = 100)
-    private String source;
+    @Column(length = 20)
+    private String category;
 
-    @Column(nullable = false, unique = true, length = 1000)
-    private String originalUrl;
-
-    private LocalDate publishedAt;
+    @Column(length = 20)
+    private String region;
 }

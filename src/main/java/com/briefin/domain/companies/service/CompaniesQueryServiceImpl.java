@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -26,11 +28,19 @@ public class CompaniesQueryServiceImpl implements CompaniesQueryService {
                 .ticker(company.getTicker())
                 .sector(company.getSector())
                 .logoUrl(company.getLogoUrl())
-                .currentPrice(company.getCurrentPrice().doubleValue())
-                .changeRate(company.getChangeRate().doubleValue())
+                .currentPrice(company.getCurrentPrice() != null ? company.getCurrentPrice().doubleValue() : null)
+                .changeRate(company.getChangeRate() != null ? company.getChangeRate().doubleValue() : null)
                 .marketCap(company.getMarketCap())
-                .isWatched(company.isWatched())
+                .isOverseas(company.isOverseas())
                 .relatedCompanies(null)
                 .build();
     }
+
+//    @Override
+//    public List<CompanyResponseDto> getCompanies() {
+//        List<Companies> companies = companiesRepository.findAll();
+//
+//
+//        return List.of();
+//    }
 }

@@ -40,4 +40,17 @@ public class Companies extends BaseEntity {
 
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
     private List<CompanyRelation> relatedCompanies;
+
+    @Column(nullable = false, unique = true)
+    private String corpCode;
+
+    @Column(nullable = false)
+    private String corpName;
+
+    private String stockCode;
+
+    public void update(String corpName, String stockCode) {
+        this.corpName = corpName;
+        this.stockCode = stockCode;
+    }
 }

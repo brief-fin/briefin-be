@@ -2,7 +2,6 @@ package com.briefin.domain.disclosures.service;
 
 import com.briefin.domain.companies.entity.Companies;
 import com.briefin.domain.companies.repository.CompaniesRepository;
-import com.briefin.domain.corp.repository.CorpRepository;
 import com.briefin.domain.disclosures.client.ChatGptClient;
 import com.briefin.domain.disclosures.client.DartApiClient;
 import com.briefin.domain.disclosures.dto.DisclosureItem;
@@ -21,7 +20,6 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
     private final ChatGptClient chatGptClient;
     private final DisclosuresRepository disclosuresRepository;
     private final CompaniesRepository companiesRepository;
-    private final CorpRepository corpRepository;
     private final DisclosureSaveService disclosureSaveService; // 추가
 
     @Override
@@ -53,7 +51,7 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
                 continue;
             }
 
-            Companies company = corpRepository.findByCorpCode(item.getCorp_code())
+            Companies company = companiesRepository.findByCorpCode(item.getCorp_code())
                     .flatMap(corp -> companiesRepository.findByTicker(corp.getStockCode()))
                     .orElse(null);
 

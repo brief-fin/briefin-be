@@ -1,7 +1,7 @@
 package com.briefin.domain.disclosures.client;
 
-import com.briefin.domain.corp.entity.Corp;
-import com.briefin.domain.corp.repository.CorpRepository;
+import com.briefin.domain.companies.entity.Companies;
+import com.briefin.domain.companies.repository.CompaniesRepository;
 import com.briefin.domain.disclosures.dto.DartListResponseDTO;
 import com.briefin.domain.disclosures.dto.DisclosureItem;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class DartApiClient {
     private String dartApiKey;
 
     private final RestTemplate restTemplate;
-    private final CorpRepository corpRepository;
+    private final CompaniesRepository companiesRepository;
 
     // corp_code 전체 동기화 (최초 1회)
     public void syncCorpCodes() throws Exception {
@@ -68,12 +68,12 @@ public class DartApiClient {
             if (stockCode.isEmpty()) continue;
 
             // skip 대신 upsert로 변경
-            corpRepository.findByCorpCode(corpCode).ifPresentOrElse(
+            companiesRepository.findByCorpCode(corpCode).ifPresentOrElse(
                     existing -> {
                         existing.update(corpName, stockCode);
-                        corpRepository.save(existing);
+                        companiesRepository.save(existing);
                     },
-                    () -> corpRepository.save(Corp.builder()
+                    () -> companiesRepository.save(Companies.builder()
                             .corpCode(corpCode)
                             .corpName(corpName)
                             .stockCode(stockCode)

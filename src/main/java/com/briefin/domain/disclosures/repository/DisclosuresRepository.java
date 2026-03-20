@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.UUID;
 
-public interface DisclosuresRepository extends JpaRepository<Disclosures, UUID> {
+public interface DisclosuresRepository extends JpaRepository<Disclosures, Long> {
 
     // 1. 기업ID로 목록 조회 (페이징)
     Page<Disclosures> findByCompanyId(Long companyId, Pageable pageable);
@@ -18,4 +18,6 @@ public interface DisclosuresRepository extends JpaRepository<Disclosures, UUID> 
 
     // 3. 기업별 최근 공시 3개
     List<Disclosures> findTop3ByCompanyIdOrderByDisclosedAtDesc(Long companyId);
+
+    boolean existsByDartId(String dartId);
 }

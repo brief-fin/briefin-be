@@ -17,6 +17,7 @@ public class DisclosuresResponseDTO {
         private Long companyId;
         private String companyName;
         private String ticker;
+        private String summary;
     }
 
     @Getter
@@ -30,6 +31,7 @@ public class DisclosuresResponseDTO {
         private Long companyId;
         private String companyName;
         private String ticker;
+        private String summary;
     }
 
     @Getter
@@ -39,5 +41,6 @@ public class DisclosuresResponseDTO {
         private String dartId;
         private String title;
         private String disclosedAt;
+        private String summary;
     }
 }

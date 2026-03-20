@@ -16,8 +16,8 @@ import java.util.UUID;
 public class Disclosures {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", columnDefinition = "long")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,6 +35,12 @@ public class Disclosures {
 
     @Column(name = "url", length = 1000)
     private String url;
+
+    @Column(name = "raw_text", columnDefinition = "TEXT")
+    private String rawText;
+
+    @Column(name = "summary", columnDefinition = "TEXT")
+    private String summary;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

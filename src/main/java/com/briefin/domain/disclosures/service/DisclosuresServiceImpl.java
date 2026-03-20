@@ -40,6 +40,7 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                 .companyId(d.getCompany().getId())
                 .companyName(d.getCompany().getName())
                 .ticker(d.getCompany().getTicker())
+                .summary(d.getSummary())
                 .build());
     }
 
@@ -58,6 +59,7 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                 .companyId(disclosure.getCompany().getId())
                 .companyName(disclosure.getCompany().getName())
                 .ticker(disclosure.getCompany().getTicker())
+                .summary(disclosure.getSummary())
                 .build();
     }
 
@@ -73,6 +75,7 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                         .dartId(d.getDartId())
                         .title(d.getTitle())
                         .disclosedAt(d.getDisclosedAt().toString())
+                        .summary(d.getSummary())
                         .build())
                 .toList();
     }

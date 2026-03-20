@@ -38,3 +38,6 @@ out/
 
 ### Claude Code ###
 .claude/
+
+### Secret ###
+src/main/resources/application.yml

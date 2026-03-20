@@ -24,7 +24,7 @@ public class Disclosures {
     @JoinColumn(name = "company_id", nullable = false)
     private Companies company;
 
-    @Column(name = "dart_id", length = 100)
+    @Column(name = "dart_id", length = 100, unique = true, nullable = false)
     private String dartId;
 
     @Column(name = "title", length = 500)

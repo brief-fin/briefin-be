@@ -70,9 +70,17 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService { 
             try {
                 // 원격 호출 먼저 (트랜잭션 밖)
                 String rawText = dartApiClient.fetchDisclosureText(item.getRcept_no());
-                String summary = chatGptClient.summarize(rawText);
 
+                // 원문 파싱 실패면 요약 스킵
+                if (rawText == null || rawText.isBlank()) {
+                    log.warn("원문 파싱 실패로 요약 스킵: {}", item.getRcept_no());
+                    saveDisclosure(company, item, rawText, null, formatter);
+                    continue;
+                }
+
+                String summary = chatGptClient.summarize(rawText);
                 // DB 저장만 트랜잭션으로
+
                 saveDisclosure(company, item, rawText, summary, formatter);
 
                 log.info("공시 저장 완료: {} - {}", item.getCorp_name(), item.getReport_nm());

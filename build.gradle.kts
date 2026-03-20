@@ -37,6 +37,8 @@ dependencies {
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
+	implementation("com.pgvector:pgvector:0.1.6")
+	implementation("org.hibernate.orm:hibernate-vector")
 }
 
 tasks.withType<Test> {

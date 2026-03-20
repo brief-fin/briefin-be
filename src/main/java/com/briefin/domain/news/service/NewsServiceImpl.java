@@ -7,10 +7,13 @@ import com.briefin.domain.news.repository.*;
 import com.briefin.global.apipayload.code.status.ErrorCode;
 import com.briefin.global.apipayload.exception.BriefinException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,23 +26,31 @@ public class NewsServiceImpl implements NewsService {
 
     @Override
     public List<NewsListResponseDTO> getNewsList(String category) {
-        List<News> newsList = (category == null || category.equals("all"))
-                ? newsSummaryRepository.findAll().stream()
-                        .map(NewsSummary::getNews)
-                        .toList()
-                : newsSummaryRepository.findByCategory(category).stream()
-                        .map(NewsSummary::getNews)
-                        .toList();
+        List<NewsSummary> summaries = (category == null || category.equals("all"))
+                ? newsSummaryRepository.findAllWithNews()
+                : newsSummaryRepository.findByCategoryWithNews(category);
 
-        return newsList.stream()
-                .map(news -> NewsConverter.toListDTO(news, getSummary(news.getId()), getCompanies(news.getId())))
+        List<Long> newsIds = summaries.stream()
+                .map(ns -> ns.getNews().getId())
+                .toList();
+
+        Map<Long, List<NewsCompany>> companiesMap = newsCompanyRepository.findByNewsIdIn(newsIds)
+                .stream()
+                .collect(Collectors.groupingBy(nc -> nc.getNews().getId()));
+
+        return summaries.stream()
+                .map(summary -> NewsConverter.toListDTO(
+                        summary.getNews(),
+                        summary,
+                        companiesMap.getOrDefault(summary.getNews().getId(), List.of())
+                ))
                 .toList();
     }
 
     @Override
     public NewsDetailResponseDTO getNewsDetail(Long newsId) {
         News news = findNewsById(newsId);
-        List<String> relatedNewsIds = newsRepository.findRelatedNews(newsId).stream()
+        List<String> relatedNewsIds = newsRepository.findRelatedNews(newsId, PageRequest.of(0, 5)).stream()
                 .map(n -> n.getId().toString())
                 .toList();
 
@@ -56,7 +67,7 @@ public class NewsServiceImpl implements NewsService {
     @Override
     public List<NewsRelatedResponseDTO> getRelatedNews(Long newsId) {
         findNewsById(newsId);
-        return newsRepository.findRelatedNews(newsId).stream()
+        return newsRepository.findRelatedNews(newsId, PageRequest.of(0, 5)).stream()
                 .map(news -> NewsConverter.toRelatedDTO(news, getSummary(news.getId())))
                 .toList();
     }

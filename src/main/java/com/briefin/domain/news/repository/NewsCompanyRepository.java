@@ -10,4 +10,6 @@ import java.util.List;
 public interface NewsCompanyRepository extends JpaRepository<NewsCompany, Long> {
 
     List<NewsCompany> findByNewsId(Long newsId);
+
+    List<NewsCompany> findByNewsIdIn(List<Long> newsIds);
 }

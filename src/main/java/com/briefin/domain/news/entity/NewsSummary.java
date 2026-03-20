@@ -17,7 +17,7 @@ public class NewsSummary extends BaseEntity {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "news_id", nullable = false)
+    @JoinColumn(name = "news_id", nullable = false, unique = true)
     private News news;
 
     @Column(columnDefinition = "TEXT")

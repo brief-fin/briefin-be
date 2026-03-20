@@ -39,6 +39,9 @@ dependencies {
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
 
 	implementation ("org.springframework.boot:spring-boot-starter-webflux")
+	implementation("org.jsoup:jsoup:1.17.2")
+	implementation("com.pgvector:pgvector:0.1.6")
+	implementation("org.hibernate.orm:hibernate-vector:6.6.13.Final")
 
 }
 

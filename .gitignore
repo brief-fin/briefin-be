@@ -39,5 +39,7 @@ out/
 ### Claude Code ###
 .claude/
 
-### Secret ###
+### Secrets ###
+application-test.yaml
+application.yml
 src/main/resources/application.yml

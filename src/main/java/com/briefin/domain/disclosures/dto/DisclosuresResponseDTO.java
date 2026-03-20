@@ -2,8 +2,9 @@ package com.briefin.domain.disclosures.dto;
 
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.data.domain.Page;
 
-import java.util.UUID;
+import java.util.List;
 
 public class DisclosuresResponseDTO {
 
@@ -18,6 +19,26 @@ public class DisclosuresResponseDTO {
         private String companyName;
         private String ticker;
         private String summary;
+    }
+
+    @Getter
+    @Builder
+    public static class DisclosurePageResponse {
+        private List<DisclosureListResponse> content;
+        private long totalElements;
+        private int totalPages;
+        private int currentPage;
+        private int size;
+
+        public static DisclosurePageResponse from(Page<DisclosureListResponse> page) {
+            return DisclosurePageResponse.builder()
+                    .content(page.getContent())
+                    .totalElements(page.getTotalElements())
+                    .totalPages(page.getTotalPages())
+                    .currentPage(page.getNumber())
+                    .size(page.getSize())
+                    .build();
+        }
     }
 
     @Getter

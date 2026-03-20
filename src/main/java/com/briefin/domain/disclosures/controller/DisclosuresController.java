@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/disclosures")
+@RequestMapping("/api/disclosures")
 @RequiredArgsConstructor
 public class DisclosuresController {
 
@@ -24,14 +24,14 @@ public class DisclosuresController {
 
     @Operation(summary = "공시 목록 조회", description = "companyId 미전달 시 전체 공시 반환")
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<DisclosuresResponseDTO.DisclosureListResponse>>> getDisclosureList(
+    public ResponseEntity<ApiResponse<DisclosuresResponseDTO.DisclosurePageResponse>> getDisclosureList(
             @RequestParam(required = false) Long companyId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Page<DisclosuresResponseDTO.DisclosureListResponse> result =
                 disclosuresService.getDisclosureList(companyId, page, size);
-        return ResponseEntity.ok(ApiResponse.success(result));
+        return ResponseEntity.ok(ApiResponse.success(DisclosuresResponseDTO.DisclosurePageResponse.from(result)));
     }
 
     @Operation(summary = "공시 상세 조회", description = "공시 ID로 단건 상세 정보 반환")

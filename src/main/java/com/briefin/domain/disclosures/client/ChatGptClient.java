@@ -16,7 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatGptClient {
 
-    @Value("${openai.api.key}")
+    @Value("${openai.api-key}")
     private String openAiKey;
 
     private final RestTemplate restTemplate;

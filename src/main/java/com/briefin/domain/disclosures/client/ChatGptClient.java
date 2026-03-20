@@ -22,6 +22,11 @@ public class ChatGptClient {
     private final RestTemplate restTemplate;
 
     public String summarize(String rawText) {
+        if (rawText == null || rawText.isBlank()) {
+            log.warn("요약할 원문이 없습니다.");
+            return null;
+        }
+
         String truncated = rawText.length() > 3000
                 ? rawText.substring(0, 3000) + "..."
                 : rawText;

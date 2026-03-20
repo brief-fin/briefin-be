@@ -6,27 +6,23 @@ import com.briefin.domain.corp.repository.CorpRepository;
 import com.briefin.domain.disclosures.client.ChatGptClient;
 import com.briefin.domain.disclosures.client.DartApiClient;
 import com.briefin.domain.disclosures.dto.DisclosureItem;
-import com.briefin.domain.disclosures.entity.Disclosures;
 import com.briefin.domain.disclosures.repository.DisclosuresRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DisclosureCollectServiceImpl implements DisclosureCollectService {  // 클래스 레벨 @Transactional 제거
+public class DisclosureCollectServiceImpl implements DisclosureCollectService {
 
     private final DartApiClient dartApiClient;
     private final ChatGptClient chatGptClient;
     private final DisclosuresRepository disclosuresRepository;
     private final CompaniesRepository companiesRepository;
     private final CorpRepository corpRepository;
+    private final DisclosureSaveService disclosureSaveService; // 추가
 
     @Override
     public void syncCorpCodes() throws Exception {
@@ -49,10 +45,9 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService { 
     }
 
     private void saveDisclosures(List<DisclosureItem> items) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-
         for (DisclosureItem item : items) {
 
+            // 최적화용 선체크 (TOCTOU 완전 방지는 아님 — catch로 보완)
             if (disclosuresRepository.existsByDartId(item.getRcept_no())) {
                 log.debug("이미 존재하는 공시 스킵: {}", item.getRcept_no());
                 continue;
@@ -68,40 +63,21 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService { 
             }
 
             try {
-                // 원격 호출 먼저 (트랜잭션 밖)
+                // 원격 호출 (트랜잭션 밖)
                 String rawText = dartApiClient.fetchDisclosureText(item.getRcept_no());
-
-                // 원문 파싱 실패면 요약 스킵
-                if (rawText == null || rawText.isBlank()) {
-                    log.warn("원문 파싱 실패로 요약 스킵: {}", item.getRcept_no());
-                    saveDisclosure(company, item, rawText, null, formatter);
-                    continue;
-                }
-
                 String summary = chatGptClient.summarize(rawText);
-                // DB 저장만 트랜잭션으로
 
-                saveDisclosure(company, item, rawText, summary, formatter);
+                // 별도 서비스로 트랜잭션 보장
+                disclosureSaveService.save(company, item, rawText, summary);
 
                 log.info("공시 저장 완료: {} - {}", item.getCorp_name(), item.getReport_nm());
 
+            } catch (DataIntegrityViolationException e) {
+                // 동시 실행으로 인한 중복 저장 시도 — 정상 케이스로 처리
+                log.debug("중복 공시 스킵 (race condition): {}", item.getRcept_no());
             } catch (Exception e) {
                 log.error("공시 처리 실패: {} - {}", item.getRcept_no(), e.getMessage());
             }
         }
-    }
-
-    @Transactional  // 저장 구간만 트랜잭션
-    public void saveDisclosure(Companies company, DisclosureItem item,
-                               String rawText, String summary, DateTimeFormatter formatter) {
-        disclosuresRepository.save(Disclosures.builder()
-                .company(company)
-                .dartId(item.getRcept_no())
-                .title(item.getReport_nm())
-                .disclosedAt(LocalDate.parse(item.getRcept_dt(), formatter))
-                .url("https://dart.fss.or.kr/dsaf001/main.do?rcpNo=" + item.getRcept_no())
-                .rawText(rawText)
-                .summary(summary)
-                .build());
     }
 }

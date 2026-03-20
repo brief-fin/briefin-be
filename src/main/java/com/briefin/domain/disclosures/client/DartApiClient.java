@@ -35,10 +35,14 @@ public class DartApiClient {
     private final RestTemplate restTemplate;
     private final CorpRepository corpRepository;
 
-    // ① corp_code 전체 동기화 (최초 1회)
+    // corp_code 전체 동기화 (최초 1회)
     public void syncCorpCodes() throws Exception {
         String url = "https://opendart.fss.or.kr/api/corpCode.xml?crtfc_key=" + dartApiKey;
         byte[] zipBytes = restTemplate.getForObject(url, byte[].class);
+
+        if (zipBytes == null) {
+            throw new RuntimeException("DART corp_code ZIP 응답이 없습니다.");
+        }
 
         try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
             ZipEntry entry;
@@ -78,17 +82,17 @@ public class DartApiClient {
         }
     }
 
-    // ② 전체 공시 목록 조회
+    // 전체 공시 목록 조회
     public List<DisclosureItem> fetchAllDisclosures(String startDate, String endDate) {
         return fetchList(null, startDate, endDate);
     }
 
-    // ③ 기업별 공시 목록 조회
+    // 기업별 공시 목록 조회
     public List<DisclosureItem> fetchDisclosuresByCorpCode(String corpCode, String startDate, String endDate) {
         return fetchList(corpCode, startDate, endDate);
     }
 
-    // ④ 공시 원문 텍스트 추출
+    // 공시 원문 텍스트 추출
     public String fetchDisclosureText(String rceptNo) {
         try {
             String viewerUrl = "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=" + rceptNo;
@@ -113,7 +117,7 @@ public class DartApiClient {
         }
     }
 
-    // ⑤ 공통 목록 조회 (페이지네이션)
+    // 공통 목록 조회 (페이지네이션)
     private List<DisclosureItem> fetchList(String corpCode, String startDate, String endDate) {
         List<DisclosureItem> allItems = new ArrayList<>();
         int pageNo = 1;

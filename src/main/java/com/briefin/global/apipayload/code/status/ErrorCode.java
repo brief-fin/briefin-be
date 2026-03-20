@@ -20,6 +20,7 @@ public enum ErrorCode implements BaseCode {
 
     // AUTH
     AUTH_UNAUTHORIZED(401, "AUTH401", "로그인 후 이용해주세요."),
+    INVALID_LOGIN(401, "AUTH402", "이메일 또는 비밀번호가 올바르지 않습니다."),
     TOKEN_EXPIRED(401, "TOKEN_EXPIRED", "토큰이 만료되었습니다."),
     TOKEN_INVALID(401, "TOKEN_INVALID", "유효하지 않은 토큰입니다."),
     TOKEN_MISSING(401, "TOKEN_MISSING", "토큰이 존재하지 않습니다."),

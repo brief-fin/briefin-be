@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.briefin.domain.auth.dto.request.SignUpRequest;
 import com.briefin.domain.auth.dto.response.SignUpResponse;
+import com.briefin.domain.auth.dto.request.LoginRequest;
+import com.briefin.domain.auth.dto.response.LoginResponse;
 import com.briefin.domain.auth.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -24,5 +26,11 @@ public class AuthController {
     public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest request) {
         SignUpResponse response = authService.signUp(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
 }

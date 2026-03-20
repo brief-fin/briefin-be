@@ -41,3 +41,4 @@ out/
 
 ### Secrets ###
 application-test.yaml
+application.yml

@@ -52,7 +52,11 @@ public enum ErrorCode implements BaseCode {
     // NEWS
     NEWS_NOT_FOUND(404, "NEWS404", "해당 뉴스를 찾을 수 없습니다."),
     NEWS_ALREADY_SCRAPED(409, "NEWS_SCRAP409", "이미 스크랩된 뉴스입니다."),
-    NEWS_SCRAP_NOT_FOUND(404, "NEWS_SCRAP404", "스크랩 정보를 찾을 수 없습니다.");
+    NEWS_SCRAP_NOT_FOUND(404, "NEWS_SCRAP404", "스크랩 정보를 찾을 수 없습니다."),
+
+    // DISCLOSURE
+    DISCLOSURE_NOT_FOUND(404, "DISCLOSURE404", "해당 공시를 찾을 수 없습니다."),
+    COMPANY_NOT_FOUND(404, "COMPANY404", "해당 기업을 찾을 수 없습니다.");
 
     private final int httpStatus;
     private final String code;

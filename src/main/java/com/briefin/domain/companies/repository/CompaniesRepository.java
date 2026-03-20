@@ -12,8 +12,8 @@ public interface CompaniesRepository extends JpaRepository<Companies, Long> {
 
     Optional<Companies> findById(Long id);
 
-//    List<Companies> findPopularCompanies();
-//
+    List<Companies> findByTickerIn(List<String> tickers);
+
 
 
 }

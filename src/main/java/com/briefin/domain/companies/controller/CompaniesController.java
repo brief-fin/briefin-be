@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/companies")
@@ -20,5 +22,10 @@ public class CompaniesController {
     @GetMapping("/{id}")
     public ResponseEntity<CompanyResponseDto> getCompany(@PathVariable Long id) {
         return ResponseEntity.ok(companiesService.getCompany(id));
+    }
+
+    @GetMapping("/popular")
+    public ResponseEntity<List<CompanyResponseDto>> getPopularCompanies() {
+        return ResponseEntity.ok(companiesService.getPopularCompanies());
     }
 }

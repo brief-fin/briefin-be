@@ -9,5 +9,6 @@ public interface CompaniesQueryService {
 
     CompanyResponseDto getCompany(Long id);
 
-//    List<CompanyResponseDto> getCompanies();
+
+    List<CompanyResponseDto> getPopularCompanies();
 }

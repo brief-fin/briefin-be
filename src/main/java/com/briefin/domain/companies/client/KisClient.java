@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -108,6 +109,33 @@ public class KisClient {
                 .block();
 
         return (Map<String, Object>) response.get("output");
+    }
+
+    public List<String> getPopularTickers() {
+        if (accessToken == null) {
+            getAccessToken();
+        }
+
+        Map response = WebClient.create(baseUrl)
+                .get()
+                .uri("/uapi/domestic-stock/v1/ranking/hts-top-view")
+                .header("authorization", "Bearer " + accessToken)
+                .header("appkey", appKey)
+                .header("appsecret", appSecret)
+                .header("tr_id", "HHMCM000100C0")
+                .header("custtype", "P")
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+
+        if (response == null || response.get("output1") == null) {
+            throw new RuntimeException("HTS 인기 종목 조회 실패");
+        }
+
+        List<Map<String, String>> output1 = (List<Map<String, String>>) response.get("output1");
+        return output1.stream()
+                .map(item -> item.get("mksc_shrn_iscd"))
+                .collect(java.util.stream.Collectors.toList());
     }
 }
 

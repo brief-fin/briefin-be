@@ -1,5 +1,6 @@
 package com.briefin.domain.companies.service;
 
+import com.briefin.domain.companies.client.KisClient;
 import com.briefin.domain.companies.dto.CompanyResponseDto;
 import com.briefin.domain.companies.entity.Companies;
 import com.briefin.domain.companies.repository.CompaniesRepository;
@@ -16,6 +17,7 @@ public class CompaniesQueryServiceImpl implements CompaniesQueryService {
 
 
     private final CompaniesRepository companiesRepository;
+    private final KisClient kisClient;
 
     @Override
     public CompanyResponseDto getCompany(Long id) {
@@ -36,11 +38,27 @@ public class CompaniesQueryServiceImpl implements CompaniesQueryService {
                 .build();
     }
 
-//    @Override
-//    public List<CompanyResponseDto> getCompanies() {
-//        List<Companies> companies = companiesRepository.findAll();
-//
-//
-//        return List.of();
-//    }
+    @Override
+    public List<CompanyResponseDto> getPopularCompanies() {
+        List<String> popularTickers = kisClient.getPopularTickers();
+        log.info("HTS 인기 종목코드 {}개 조회: {}", popularTickers.size(), popularTickers);
+
+        List<Companies> companies = companiesRepository.findByTickerIn(popularTickers);
+        log.info("DB 매칭 기업 {}개: {}", companies.size(),
+                companies.stream().map(Companies::getName).collect(java.util.stream.Collectors.toList()));
+
+        return companies.stream()
+                .map(company -> CompanyResponseDto.builder()
+                        .id(company.getId())
+                        .name(company.getName())
+                        .ticker(company.getTicker())
+                        .sector(company.getSector())
+                        .logoUrl(company.getLogoUrl())
+                        .currentPrice(company.getCurrentPrice() != null ? company.getCurrentPrice().doubleValue() : null)
+                        .changeRate(company.getChangeRate() != null ? company.getChangeRate().doubleValue() : null)
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+
 }

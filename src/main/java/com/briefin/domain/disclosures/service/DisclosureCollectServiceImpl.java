@@ -10,6 +10,7 @@ import com.briefin.domain.disclosures.repository.DisclosuresRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import java.util.List;
 @Slf4j
@@ -66,8 +67,6 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
                 String summary = chatGptClient.summarize(rawText);
                 String summaryDetail = chatGptClient.summarizeDetail(rawText);
 
-                log.info("summaryDetail: {}", summaryDetail);
-
                 // 별도 서비스로 트랜잭션 보장
                 disclosureSaveService.save(company, item, rawText, summary, summaryDetail);
 
@@ -82,6 +81,7 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
         }
     }
 
+    @Async
     @Override
     public void fillMissingSummaryDetail() {
         List<Disclosures> targets = disclosuresRepository.findBySummaryDetailIsNull();

@@ -100,7 +100,8 @@ public class DisclosuresController {
     @Operation(summary = "summaryDetail 일괄 업데이트", description = "기존 공시 중 summaryDetail 없는 건 GPT로 채움")
     @PostMapping("/fill-summary-detail")
     public ResponseEntity<ApiResponse<?>> fillSummaryDetail() {
-        disclosureCollectService.fillMissingSummaryDetail();
-        return ResponseEntity.ok(ApiResponse.success("summaryDetail 업데이트 완료"));
+        disclosureCollectService.fillMissingSummaryDetail(); // 즉시 반환, 백그라운드 실행
+        return ResponseEntity.accepted()
+                .body(ApiResponse.success("summaryDetail 업데이트 시작됨 (백그라운드 실행 중)"));
     }
 }

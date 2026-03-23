@@ -7,7 +7,7 @@ public class PushSubscriptionRequestDTO {
 
     @Getter
     public static class SubscribeRequest {
-        private UUID companyId;
+        private Long companyId;
         private String endpoint;
         private String p256dh;
         private String auth;
@@ -15,6 +15,6 @@ public class PushSubscriptionRequestDTO {
 
     @Getter
     public static class UnsubscribeRequest {
-        private UUID companyId;
+        private Long companyId;
     }
 }

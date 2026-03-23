@@ -44,7 +44,7 @@ public class WebPushServiceImpl implements WebPushService {
 
     @Override
     @Transactional
-    public void subscribe(UUID userId, UUID companyId, String endpoint, String p256dh, String auth) {
+    public void subscribe(UUID userId, Long companyId, String endpoint, String p256dh, String auth) {
         if (pushSubscriptionRepository.existsByUserIdAndCompanyIdAndEndpoint(userId, companyId, endpoint)) {
             log.debug("이미 구독 중: userId={}, companyId={}", userId, companyId);
             return;
@@ -61,13 +61,13 @@ public class WebPushServiceImpl implements WebPushService {
 
     @Override
     @Transactional
-    public void unsubscribe(UUID userId, UUID companyId) {
+    public void unsubscribe(UUID userId, Long companyId) {
         pushSubscriptionRepository.deleteByUserIdAndCompanyId(userId, companyId);
         log.info("푸시 구독 취소: userId={}, companyId={}", userId, companyId);
     }
 
     @Override
-    public void sendToSubscribers(UUID companyId, String title, String body) {
+    public void sendToSubscribers(Long companyId, String title, String body) {
         List<PushSubscription> subscribers = pushSubscriptionRepository.findByCompanyId(companyId);
         if (subscribers.isEmpty()) return;
 

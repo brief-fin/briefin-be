@@ -4,18 +4,22 @@ import com.briefin.domain.companies.entity.Companies;
 import com.briefin.domain.disclosures.dto.DisclosureItem;
 import com.briefin.domain.disclosures.entity.Disclosures;
 import com.briefin.domain.disclosures.repository.DisclosuresRepository;
+import com.briefin.domain.pushSubscription.service.WebPushService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DisclosureSaveService {
 
     private final DisclosuresRepository disclosuresRepository;
+    private final WebPushService webPushService;  // 추가
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
@@ -31,11 +35,20 @@ public class DisclosureSaveService {
                 .summary(summary)
                 .summaryDetail(summaryDetail)
                 .build());
+
+        // 공시 저장 후 구독자에게 푸시 발송
+        webPushService.sendToSubscribers(
+                company.getId(),
+                company.getName() + " 새 공시",
+                item.getReport_nm()
+        );
     }
 
     @Transactional
     public void updateSummaryDetail(Long id, String summaryDetail) {
-        disclosuresRepository.findById(id)
-                .ifPresent(d -> d.updateSummaryDetail(summaryDetail));
+        disclosuresRepository.findById(id).ifPresentOrElse(
+                d -> d.updateSummaryDetail(summaryDetail),
+                () -> log.warn("summaryDetail 업데이트 대상 공시 미존재: id={}", id)
+        );
     }
 }

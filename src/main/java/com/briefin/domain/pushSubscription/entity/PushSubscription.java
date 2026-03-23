@@ -23,7 +23,7 @@ public class PushSubscription {
     private UUID userId;
 
     @Column(name = "company_id", nullable = false)
-    private UUID companyId;
+    private Long companyId;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String endpoint;

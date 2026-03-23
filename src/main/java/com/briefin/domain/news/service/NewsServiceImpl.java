@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.dao.DataIntegrityViolationException;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -55,12 +57,16 @@ public class NewsServiceImpl implements NewsService {
     public NewsDetailResponseDTO getNewsDetail(Long newsId, UUID userId) {
         News news = findNewsById(newsId);
 
-        if (!newsViewRepository.existsByUserIdAndNewsId(userId, newsId)) {
-            newsViewRepository.save(NewsView.builder()
-                    .userId(userId)
-                    .news(news)
-                    .viewedAt(LocalDateTime.now())
-                    .build());
+        try {
+            if (!newsViewRepository.existsByUserIdAndNewsId(userId, newsId)) {
+                newsViewRepository.save(NewsView.builder()
+                        .userId(userId)
+                        .news(news)
+                        .viewedAt(LocalDateTime.now())
+                        .build());
+            }
+        } catch (DataIntegrityViolationException ignored) {
+            // 동시 요청으로 인한 unique constraint 위반 — 이미 저장된 것으로 간주
         }
 
         List<String> relatedNewsIds = newsEmbeddingRepository.findRelatedNewsIds(newsId, 5).stream()

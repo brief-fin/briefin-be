@@ -11,10 +11,7 @@ public interface CompaniesRepository extends JpaRepository<Companies, Long> {
 
     Optional<Companies> findById(Long id);
 
-    Optional<Companies> findByTicker(String ticker);
-    Optional<Companies> findByStockCode(String stockCode);
     Optional<Companies> findByCorpCode(String corpCode);
-    boolean existsByCorpCode(String corpCode);
 
 
 

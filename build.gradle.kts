@@ -50,7 +50,6 @@ dependencies {
 	implementation("org.hibernate.orm:hibernate-vector:6.6.13.Final")
 	implementation ("com.squareup.okhttp3:okhttp:4.12.0")
 	implementation ("com.fasterxml.jackson.core:jackson-databind:2.15.2")
-	implementation("org.springframework.boot:spring-boot-starter-webflux")
 }
 
 tasks.withType<Test> {

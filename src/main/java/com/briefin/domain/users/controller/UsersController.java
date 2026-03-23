@@ -7,6 +7,9 @@ import com.briefin.domain.users.service.ScrapsService;
 import com.briefin.domain.users.service.UsersService;
 import com.briefin.domain.users.service.WatchlistService;
 import com.briefin.global.apipayload.ApiResponse;
+import com.briefin.global.security.jwt.SecurityUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,4 +46,20 @@ public class UsersController {
     ) {
         return ResponseEntity.ok(ApiResponse.success(watchlistService.getWatchlist(userId)));
     }
+
+
+    @PostMapping("/{id}/watch")
+    @Operation(summary = "관심 기업 등록", description = "사용자가 특정 기업을 관심 등록합니다.")
+    @SecurityRequirement(name = "JWT TOKEN")
+    public ResponseEntity<WatchlistResponseDto.WatchlistAddResponseDto> addWatch(@PathVariable Long id) {
+        return ResponseEntity.ok(watchlistService.addWatch(id, SecurityUtils.getCurrentUserId()));
+    }
+
+    @DeleteMapping("/{id}/watch")
+    @Operation(summary = "관심 기업 취소", description = "사용자가 특정 기업을 관심 목록에서 취소합니다.")
+    public ResponseEntity<Void> removeWatch(@PathVariable Long id) {
+        watchlistService.removeWatch(id, SecurityUtils.getCurrentUserId());
+        return ResponseEntity.noContent().build();
+    }
+
 }

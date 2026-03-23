@@ -8,7 +8,7 @@ import java.util.List;
 
 public class NewsConverter {
 
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ISO_DATE;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public static NewsListResponseDTO toListDTO(News news, NewsSummary summary, List<NewsCompany> companies) {
         return new NewsListResponseDTO(

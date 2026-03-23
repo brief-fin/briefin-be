@@ -21,6 +21,9 @@ public class JwtProvider {
     @Value("${jwt.access-token-expiration}")
     private long accessTokenExpiration;
 
+    @Value("${jwt.refresh-token-expiration}")
+    private long refreshTokenExpiration;
+
     private Key key;
 
     @PostConstruct
@@ -35,6 +38,21 @@ public class JwtProvider {
         return Jwts.builder()
                 .setSubject(userId.toString())
                 .claim("email", email)
+                .claim("type", "access")
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public String createRefreshToken(UUID userId, String email) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + refreshTokenExpiration);
+
+        return Jwts.builder()
+                .setSubject(userId.toString())
+                .claim("email", email)
+                .claim("type", "refresh")
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -49,6 +67,11 @@ public class JwtProvider {
     public String getEmailFromToken(String token) {
         Claims claims = parseClaims(token);
         return claims.get("email", String.class);
+    }
+
+    public String getTokenType(String token) {
+        Claims claims = parseClaims(token);
+        return claims.get("type", String.class);
     }
 
     public boolean validateToken(String token) {

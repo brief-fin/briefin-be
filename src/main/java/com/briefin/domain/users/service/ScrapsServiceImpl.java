@@ -91,4 +91,18 @@ public class ScrapsServiceImpl implements ScrapsService {
                 .scrapedAt(scrap.getCreatedAt())
                 .build();
     }
+
+    @Override
+    @Transactional
+    public ScrapResponseDto removeScrap(UUID userId, Long newsId) {
+        Scraps scrap = scrapsRepository.findByUserIdAndNewsId(userId, newsId)
+                .orElseThrow(() -> new BriefinException(ErrorCode.NEWS_SCRAP_NOT_FOUND));
+
+        scrapsRepository.delete(scrap);
+
+        return ScrapResponseDto.builder()
+                .newsId(newsId)
+                .isScraped(false)
+                .build();
+    }
 }

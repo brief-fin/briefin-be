@@ -20,6 +20,7 @@ public enum ErrorCode implements BaseCode {
 
     // AUTH
     AUTH_UNAUTHORIZED(401, "AUTH401", "로그인 후 이용해주세요."),
+    INVALID_LOGIN(401, "AUTH402", "이메일 또는 비밀번호가 올바르지 않습니다."),
     TOKEN_EXPIRED(401, "TOKEN_EXPIRED", "토큰이 만료되었습니다."),
     TOKEN_INVALID(401, "TOKEN_INVALID", "유효하지 않은 토큰입니다."),
     TOKEN_MISSING(401, "TOKEN_MISSING", "토큰이 존재하지 않습니다."),
@@ -30,8 +31,9 @@ public enum ErrorCode implements BaseCode {
     USER_BAD_REQUEST(400, "USER400", "잘못된 사용자 요청입니다."),
     USER_NOT_FOUND(404, "USER404", "해당 사용자를 찾을 수 없습니다."),
     USER_CONFLICT(409, "USER409", "이미 존재하는 사용자입니다."),
-    DUPLICATE_EMAIL(409, "DUPLICATE_EMAIL", "이미 사용 중인 이메일입니다."),
+    DUPLICATE_EMAIL(409, "DUPLICATE_EMAIL", "이미 가입된 이메일입니다. 로그인해 주세요"),
     DUPLICATE_NICKNAME(409, "DUPLICATE_NICKNAME", "이미 사용 중인 닉네임입니다."),
+    PASSWORD_MISMATCH(400, "PASSWORD_MISMATCH", "비밀번호가 일치하지 않습니다."),
 
     // FILE
     FILE_BAD_REQUEST(400, "FILE400", "파일 요청이 잘못되었습니다."),

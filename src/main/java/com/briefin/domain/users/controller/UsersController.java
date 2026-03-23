@@ -10,10 +10,11 @@ import com.briefin.global.apipayload.ApiResponse;
 import com.briefin.global.security.jwt.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import com.briefin.global.security.jwt.JwtUserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,25 +27,25 @@ public class UsersController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponseDto>> getMyInfo(
-            @RequestParam UUID userId //JWT 인증 구현 전 임시
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo
     ){
-        return ResponseEntity.ok(ApiResponse.success(usersService.getUser(userId)));
+        return ResponseEntity.ok(ApiResponse.success(usersService.getUser(jwtUserInfo.userId())));
     }
 
     @GetMapping("/scraps")
     public ResponseEntity<ApiResponse<ScrapNewsResponseDto>> getScrappedNews(
-            @RequestParam UUID userId, //JWT 인증 구현 전 임시
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(ApiResponse.success(scrapsService.getScrappedNews(userId, page, size)));
+        return ResponseEntity.ok(ApiResponse.success(scrapsService.getScrappedNews(jwtUserInfo.userId(), page, size)));
     }
 
     @GetMapping("/watchlist")
     public ResponseEntity<ApiResponse<WatchlistResponseDto>> getWatchlist(
-            @RequestParam UUID userId //JWT 인증 구현 전 임시
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo
     ) {
-        return ResponseEntity.ok(ApiResponse.success(watchlistService.getWatchlist(userId)));
+        return ResponseEntity.ok(ApiResponse.success(watchlistService.getWatchlist(jwtUserInfo.userId())));
     }
 
 

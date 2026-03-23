@@ -3,9 +3,11 @@ package com.briefin.domain.news.controller;
 import com.briefin.domain.news.dto.*;
 import com.briefin.domain.news.service.NewsService;
 import com.briefin.global.apipayload.ApiResponse;
+import com.briefin.global.security.jwt.JwtUserInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,8 +29,10 @@ public class NewsController {
 
     @Operation(summary = "뉴스 상세 조회")
     @GetMapping("/{id}")
-    public ApiResponse<NewsDetailResponseDTO> getNewsDetail(@PathVariable Long id) {
-        return ApiResponse.success(newsService.getNewsDetail(id));
+    public ApiResponse<NewsDetailResponseDTO> getNewsDetail(
+            @AuthenticationPrincipal JwtUserInfo userInfo,
+            @PathVariable Long id) {
+        return ApiResponse.success(newsService.getNewsDetail(id, userInfo.userId()));
     }
 
     @Operation(summary = "키워드로 뉴스 검색")

@@ -14,4 +14,6 @@ public interface ScrapsRepository extends JpaRepository<Scraps, Long> {
 
     @Query("SELECT s FROM Scraps s JOIN FETCH s.news WHERE s.user.id = :userId ORDER BY s.createdAt DESC")
     Page<Scraps> findByUserIdWithNews(UUID userId, Pageable pageable);
+
+    boolean existsByUserIdAndNewsId(UUID userId, Long newsId);
 }

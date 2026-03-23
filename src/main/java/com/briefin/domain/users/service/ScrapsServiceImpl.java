@@ -75,10 +75,15 @@ public class ScrapsServiceImpl implements ScrapsService {
         News news = newsRepository.findById(newsId)
                 .orElseThrow(() -> new BriefinException(ErrorCode.NEWS_NOT_FOUND));
 
-        Scraps scrap = scrapsRepository.save(Scraps.builder()
-                .user(user)
-                .news(news)
-                .build());
+        Scraps scrap;
+        try {
+            scrap = scrapsRepository.save(Scraps.builder()
+                    .user(user)
+                    .news(news)
+                    .build());
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new BriefinException(ErrorCode.NEWS_ALREADY_SCRAPED);
+        }
 
         return ScrapResponseDto.builder()
                 .newsId(news.getId())

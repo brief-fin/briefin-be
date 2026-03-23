@@ -4,7 +4,7 @@ import com.briefin.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Builder
 @Getter
@@ -30,5 +30,5 @@ public class News extends BaseEntity {
     @Column(nullable = false, unique = true, length = 1000)
     private String originalUrl;
 
-    private LocalDate publishedAt;
+    private LocalDateTime publishedAt;
 }

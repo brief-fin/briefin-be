@@ -7,7 +7,6 @@ import com.briefin.domain.news.repository.*;
 import com.briefin.global.apipayload.code.status.ErrorCode;
 import com.briefin.global.apipayload.exception.BriefinException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +22,7 @@ public class NewsServiceImpl implements NewsService {
     private final NewsRepository newsRepository;
     private final NewsSummaryRepository newsSummaryRepository;
     private final NewsCompanyRepository newsCompanyRepository;
+    private final NewsEmbeddingRepository newsEmbeddingRepository;
 
     @Override
     public List<NewsListResponseDTO> getNewsList(String category) {
@@ -50,8 +50,8 @@ public class NewsServiceImpl implements NewsService {
     @Override
     public NewsDetailResponseDTO getNewsDetail(Long newsId) {
         News news = findNewsById(newsId);
-        List<String> relatedNewsIds = newsRepository.findRelatedNews(newsId, PageRequest.of(0, 5)).stream()
-                .map(n -> n.getId().toString())
+        List<String> relatedNewsIds = newsEmbeddingRepository.findRelatedNewsIds(newsId, 5).stream()
+                .map(Object::toString)
                 .toList();
 
         return NewsConverter.toDetailDTO(news, getSummary(newsId), getCompanies(newsId), relatedNewsIds);
@@ -67,8 +67,12 @@ public class NewsServiceImpl implements NewsService {
     @Override
     public List<NewsRelatedResponseDTO> getRelatedNews(Long newsId) {
         findNewsById(newsId);
-        return newsRepository.findRelatedNews(newsId, PageRequest.of(0, 5)).stream()
-                .map(news -> NewsConverter.toRelatedDTO(news, getSummary(news.getId())))
+        List<Long> relatedIds = newsEmbeddingRepository.findRelatedNewsIds(newsId, 5);
+        Map<Long, News> newsMap = newsRepository.findAllById(relatedIds).stream()
+                .collect(Collectors.toMap(News::getId, n -> n));
+        return relatedIds.stream()
+                .filter(newsMap::containsKey)
+                .map(id -> NewsConverter.toRelatedDTO(newsMap.get(id), getSummary(id)))
                 .toList();
     }
 

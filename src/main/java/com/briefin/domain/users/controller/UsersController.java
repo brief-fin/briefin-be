@@ -2,13 +2,16 @@ package com.briefin.domain.users.controller;
 
 import com.briefin.domain.users.dto.ScrapNewsResponseDto;
 import com.briefin.domain.users.dto.UserResponseDto;
+import com.briefin.domain.users.dto.WatchlistResponseDto;
 import com.briefin.domain.users.service.ScrapsService;
 import com.briefin.domain.users.service.UsersService;
+import com.briefin.domain.users.service.WatchlistService;
 import com.briefin.global.apipayload.ApiResponse;
+import com.briefin.global.security.jwt.JwtUserInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,20 +20,28 @@ import java.util.UUID;
 public class UsersController {
     private final UsersService usersService;
     private final ScrapsService scrapsService;
+    private final WatchlistService watchlistService;
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponseDto>> getMyInfo(
-            @RequestParam UUID userId //JWT 인증 구현 전 임시
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo
     ){
-        return ResponseEntity.ok(ApiResponse.success(usersService.getUser(userId)));
+        return ResponseEntity.ok(ApiResponse.success(usersService.getUser(jwtUserInfo.userId())));
     }
 
     @GetMapping("/scraps")
     public ResponseEntity<ApiResponse<ScrapNewsResponseDto>> getScrappedNews(
-            @RequestParam UUID userId, //JWT 인증 구현 전 임시
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(ApiResponse.success(scrapsService.getScrappedNews(userId, page, size)));
+        return ResponseEntity.ok(ApiResponse.success(scrapsService.getScrappedNews(jwtUserInfo.userId(), page, size)));
+    }
+
+    @GetMapping("/watchlist")
+    public ResponseEntity<ApiResponse<WatchlistResponseDto>> getWatchlist(
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(watchlistService.getWatchlist(jwtUserInfo.userId())));
     }
 }

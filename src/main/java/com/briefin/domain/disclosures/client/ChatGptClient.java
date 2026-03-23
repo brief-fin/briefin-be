@@ -174,8 +174,8 @@ public class ChatGptClient {
                     .block();
 
         } catch (Exception e) {
-            log.error("ChatGPT 상세 요약 실패: {}", e.getMessage());
-            return null;
+            log.error("ChatGPT 요약 실패", e);
+            throw new IllegalStateException("ChatGPT 요약 실패", e);
         }
     }
 }

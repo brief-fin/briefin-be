@@ -5,14 +5,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.briefin.domain.auth.dto.request.LoginRequest;
+import com.briefin.domain.auth.dto.request.LogoutRequest;
+import com.briefin.domain.auth.dto.request.RefreshTokenRequest;
 import com.briefin.domain.auth.dto.request.SignUpRequest;
 import com.briefin.domain.auth.dto.response.LoginResponse;
+import com.briefin.domain.auth.dto.response.RefreshTokenResponse;
 import com.briefin.domain.auth.dto.response.SignUpResponse;
 import com.briefin.domain.users.entity.Users;
 import com.briefin.domain.users.repository.UsersRepository;
 import com.briefin.global.apipayload.code.status.ErrorCode;
 import com.briefin.global.apipayload.exception.BriefinException;
 import com.briefin.global.security.jwt.JwtProvider;
+import com.briefin.global.security.jwt.RefreshTokenService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +28,7 @@ public class AuthService {
     private final UsersRepository usersRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public SignUpResponse signUp(SignUpRequest request) {
@@ -64,7 +69,60 @@ public class AuthService {
         }
 
         String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail());
+        String refreshToken = jwtProvider.createRefreshToken(user.getId(), user.getEmail());
 
-        return new LoginResponse(accessToken);
+        refreshTokenService.save(user.getId(), refreshToken);
+
+        return LoginResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    @Transactional
+    public RefreshTokenResponse refresh(RefreshTokenRequest request) {
+        String refreshToken = request.refreshToken();
+
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new BriefinException(ErrorCode.INVALID_TOKEN);
+        }
+
+        if (!"refresh".equals(jwtProvider.getTokenType(refreshToken))) {
+            throw new BriefinException(ErrorCode.INVALID_TOKEN);
+        }
+
+        var userId = jwtProvider.getUserIdFromToken(refreshToken);
+        var email = jwtProvider.getEmailFromToken(refreshToken);
+
+        if (!refreshTokenService.matches(userId, refreshToken)) {
+            throw new BriefinException(ErrorCode.INVALID_TOKEN);
+        }
+
+        String newAccessToken = jwtProvider.createAccessToken(userId, email);
+
+        return RefreshTokenResponse.builder()
+                .accessToken(newAccessToken)
+                .build();
+    }
+
+    @Transactional
+    public void logout(LogoutRequest request) {
+        String refreshToken = request.refreshToken();
+
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new BriefinException(ErrorCode.INVALID_TOKEN);
+        }
+
+        if (!"refresh".equals(jwtProvider.getTokenType(refreshToken))) {
+            throw new BriefinException(ErrorCode.INVALID_TOKEN);
+        }
+
+        var userId = jwtProvider.getUserIdFromToken(refreshToken);
+
+        if (!refreshTokenService.matches(userId, refreshToken)) {
+            throw new BriefinException(ErrorCode.INVALID_TOKEN);
+        }
+
+        refreshTokenService.delete(userId);
     }
 }

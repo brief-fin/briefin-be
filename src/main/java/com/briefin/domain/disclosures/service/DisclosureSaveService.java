@@ -20,7 +20,7 @@ public class DisclosureSaveService {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     @Transactional
-    public void save(Companies company, DisclosureItem item, String rawText, String summary) {
+    public void save(Companies company, DisclosureItem item, String rawText, String summary, String summaryDetail) {
         disclosuresRepository.save(Disclosures.builder()
                 .company(company)
                 .dartId(item.getRcept_no())
@@ -29,6 +29,13 @@ public class DisclosureSaveService {
                 .url("https://dart.fss.or.kr/dsaf001/main.do?rcpNo=" + item.getRcept_no())
                 .rawText(rawText)
                 .summary(summary)
+                .summaryDetail(summaryDetail)
                 .build());
+    }
+
+    @Transactional
+    public void updateSummaryDetail(Long id, String summaryDetail) {
+        disclosuresRepository.findById(id)
+                .ifPresent(d -> d.updateSummaryDetail(summaryDetail));
     }
 }

@@ -2,6 +2,7 @@ package com.briefin.domain.disclosures.repository;
 
 import com.briefin.domain.disclosures.entity.Disclosures;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -20,4 +21,6 @@ public interface DisclosuresRepository extends JpaRepository<Disclosures, Long> 
     List<Disclosures> findTop3ByCompanyIdOrderByDisclosedAtDesc(Long companyId);
 
     boolean existsByDartId(String dartId);
+
+    List<Disclosures> findBySummaryDetailIsNull();
 }

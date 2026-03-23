@@ -48,7 +48,6 @@ dependencies {
 	implementation("org.jsoup:jsoup:1.17.2")
 	implementation("com.pgvector:pgvector:0.1.6")
 	implementation("org.hibernate.orm:hibernate-vector:6.6.13.Final")
-
 }
 
 tasks.withType<Test> {

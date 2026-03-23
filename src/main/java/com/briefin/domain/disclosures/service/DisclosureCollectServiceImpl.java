@@ -5,6 +5,7 @@ import com.briefin.domain.companies.repository.CompaniesRepository;
 import com.briefin.domain.disclosures.client.ChatGptClient;
 import com.briefin.domain.disclosures.client.DartApiClient;
 import com.briefin.domain.disclosures.dto.DisclosureItem;
+import com.briefin.domain.disclosures.entity.Disclosures;
 import com.briefin.domain.disclosures.repository.DisclosuresRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -63,9 +64,12 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
                 // 원격 호출 (트랜잭션 밖)
                 String rawText = dartApiClient.fetchDisclosureText(item.getRcept_no());
                 String summary = chatGptClient.summarize(rawText);
+                String summaryDetail = chatGptClient.summarizeDetail(rawText);
+
+                log.info("summaryDetail: {}", summaryDetail);
 
                 // 별도 서비스로 트랜잭션 보장
-                disclosureSaveService.save(company, item, rawText, summary);
+                disclosureSaveService.save(company, item, rawText, summary, summaryDetail);
 
                 log.info("공시 저장 완료: {} - {}", item.getCorp_name(), item.getReport_nm());
 
@@ -74,6 +78,22 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
                 log.debug("중복 공시 스킵 (race condition): {}", item.getRcept_no());
             } catch (Exception e) {
                 log.error("공시 처리 실패: {} - {}", item.getRcept_no(), e.getMessage());
+            }
+        }
+    }
+
+    @Override
+    public void fillMissingSummaryDetail() {
+        List<Disclosures> targets = disclosuresRepository.findBySummaryDetailIsNull();
+        log.info("summaryDetail 미설정 공시: {}건", targets.size());
+
+        for (Disclosures disclosure : targets) {
+            try {
+                String summaryDetail = chatGptClient.summarizeDetail(disclosure.getRawText());
+                disclosureSaveService.updateSummaryDetail(disclosure.getId(), summaryDetail);
+                log.info("summaryDetail 업데이트 완료: {}", disclosure.getDartId());
+            } catch (Exception e) {
+                log.error("summaryDetail 업데이트 실패: {} - {}", disclosure.getDartId(), e.getMessage());
             }
         }
     }

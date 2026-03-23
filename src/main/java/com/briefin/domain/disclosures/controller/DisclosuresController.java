@@ -96,4 +96,11 @@ public class DisclosuresController {
                     .body(ApiResponse.error(ErrorCode.INTERNAL_SERVER_ERROR));
         }
     }
+
+    @Operation(summary = "summaryDetail 일괄 업데이트", description = "기존 공시 중 summaryDetail 없는 건 GPT로 채움")
+    @PostMapping("/fill-summary-detail")
+    public ResponseEntity<ApiResponse<?>> fillSummaryDetail() {
+        disclosureCollectService.fillMissingSummaryDetail();
+        return ResponseEntity.ok(ApiResponse.success("summaryDetail 업데이트 완료"));
+    }
 }

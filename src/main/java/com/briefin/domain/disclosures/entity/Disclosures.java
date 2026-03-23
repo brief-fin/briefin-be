@@ -45,8 +45,15 @@ public class Disclosures {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String summaryDetail;  // GPT 상세 분석
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public void updateSummaryDetail(String summaryDetail) {
+        this.summaryDetail = summaryDetail;
     }
 }

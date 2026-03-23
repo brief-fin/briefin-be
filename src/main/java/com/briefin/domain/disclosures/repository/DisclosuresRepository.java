@@ -20,4 +20,6 @@ public interface DisclosuresRepository extends JpaRepository<Disclosures, Long> 
     List<Disclosures> findTop3ByCompanyIdOrderByDisclosedAtDesc(Long companyId);
 
     boolean existsByDartId(String dartId);
+
+    List<Disclosures> findBySummaryDetailIsNull();
 }

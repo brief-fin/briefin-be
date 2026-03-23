@@ -60,6 +60,7 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                 .companyName(disclosure.getCompany().getName())
                 .ticker(disclosure.getCompany().getTicker())
                 .summary(disclosure.getSummary())
+                .summaryDetail(disclosure.getSummaryDetail())
                 .build();
     }
 

@@ -15,8 +15,8 @@ public class CompanyResponseDto {
     private String logoUrl;                 // 로고 이미지 URL
     private Double currentPrice;            // 현재가
     private Double changeRate;              // 등락률 (%)
-    private Integer marketCap;              // 시가총액 (조)
-    private Boolean isWatched;
+    private Integer marketCap;
+    private boolean isOverseas;
     private List<RelatedCompanyDto> relatedCompanies;  // 관련 기업 목록
 
 

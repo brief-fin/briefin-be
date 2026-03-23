@@ -31,12 +31,12 @@ public class Companies extends BaseEntity {
     private String logoUrl;
 
     private BigDecimal currentPrice;
-    
+
     private BigDecimal changeRate;
 
     private Integer marketCap;
 
-    private boolean isWatched;
+    private boolean isOverseas;
 
     @OneToMany(mappedBy = "company", fetch = FetchType.LAZY)
     private List<CompanyRelation> relatedCompanies;

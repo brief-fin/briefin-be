@@ -27,6 +27,7 @@ public enum ErrorCode implements BaseCode {
     AUTH_FORBIDDEN(403, "AUTH403", "접근 권한이 없습니다."),
     ACCESS_DENIED(403, "ACCESS_DENIED", "해당 리소스에 접근할 수 없습니다."),
     INVALID_TOKEN(401, "INVALID_TOKEN", "유효하지 않은 토큰입니다."),
+    TOKEN_REUSE_DETECTED(401, "TOKEN_REUSE_DETECTED", "토큰 재사용이 감지되었습니다."),
 
     // USER
     USER_BAD_REQUEST(400, "USER400", "잘못된 사용자 요청입니다."),

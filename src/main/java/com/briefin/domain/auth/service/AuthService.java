@@ -5,11 +5,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.briefin.domain.auth.dto.request.LoginRequest;
-import com.briefin.domain.auth.dto.request.LogoutRequest;
-import com.briefin.domain.auth.dto.request.RefreshTokenRequest;
 import com.briefin.domain.auth.dto.request.SignUpRequest;
-import com.briefin.domain.auth.dto.response.LoginResponse;
-import com.briefin.domain.auth.dto.response.RefreshTokenResponse;
+import com.briefin.domain.auth.dto.result.LoginResult;
+import com.briefin.domain.auth.dto.result.RefreshTokenResult;
 import com.briefin.domain.auth.dto.response.SignUpResponse;
 import com.briefin.domain.users.entity.Users;
 import com.briefin.domain.users.repository.UsersRepository;
@@ -60,7 +58,7 @@ public class AuthService {
     }
 
     @Transactional
-    public LoginResponse login(LoginRequest request) {
+    public LoginResult login(LoginRequest request) {
         Users user = usersRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BriefinException(ErrorCode.INVALID_LOGIN));
 
@@ -73,56 +71,65 @@ public class AuthService {
 
         refreshTokenService.save(user.getId(), refreshToken);
 
-        return LoginResponse.builder()
+        return LoginResult.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
     }
 
     @Transactional
-    public RefreshTokenResponse refresh(RefreshTokenRequest request) {
-        String refreshToken = request.refreshToken();
-
+    public RefreshTokenResult refresh(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new BriefinException(ErrorCode.TOKEN_MISSING);
+        }
+    
         if (!jwtProvider.validateToken(refreshToken)) {
-            throw new BriefinException(ErrorCode.INVALID_TOKEN);
+            throw new BriefinException(ErrorCode.TOKEN_INVALID);
         }
-
+    
         if (!"refresh".equals(jwtProvider.getTokenType(refreshToken))) {
-            throw new BriefinException(ErrorCode.INVALID_TOKEN);
+            throw new BriefinException(ErrorCode.TOKEN_INVALID);
         }
-
+    
         var userId = jwtProvider.getUserIdFromToken(refreshToken);
         var email = jwtProvider.getEmailFromToken(refreshToken);
-
+    
         if (!refreshTokenService.matches(userId, refreshToken)) {
-            throw new BriefinException(ErrorCode.INVALID_TOKEN);
+            refreshTokenService.delete(userId);
+            throw new BriefinException(ErrorCode.TOKEN_REUSE_DETECTED);
         }
-
+    
         String newAccessToken = jwtProvider.createAccessToken(userId, email);
-
-        return RefreshTokenResponse.builder()
+        String newRefreshToken = jwtProvider.createRefreshToken(userId, email);
+    
+        refreshTokenService.save(userId, newRefreshToken);
+    
+        return RefreshTokenResult.builder()
                 .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
                 .build();
     }
 
     @Transactional
-    public void logout(LogoutRequest request) {
-        String refreshToken = request.refreshToken();
-
+    public void logout(String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new BriefinException(ErrorCode.INVALID_TOKEN);
+        }
+    
         if (!jwtProvider.validateToken(refreshToken)) {
             throw new BriefinException(ErrorCode.INVALID_TOKEN);
         }
-
+    
         if (!"refresh".equals(jwtProvider.getTokenType(refreshToken))) {
             throw new BriefinException(ErrorCode.INVALID_TOKEN);
         }
-
+    
         var userId = jwtProvider.getUserIdFromToken(refreshToken);
-
+    
         if (!refreshTokenService.matches(userId, refreshToken)) {
             throw new BriefinException(ErrorCode.INVALID_TOKEN);
         }
-
+    
         refreshTokenService.delete(userId);
     }
 }

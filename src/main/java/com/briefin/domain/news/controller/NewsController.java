@@ -55,4 +55,13 @@ public class NewsController {
     ) {
         return ApiResponse.success(scrapsService.addScrap(jwtUserInfo.userId(), id));
     }
+
+    @Operation(summary = "뉴스 스크랩 취소")
+    @DeleteMapping("/{id}/scrap")
+    public ApiResponse<ScrapResponseDto> removeScrap(
+            @PathVariable Long id,
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo
+    ) {
+        return ApiResponse.success(scrapsService.removeScrap(jwtUserInfo.userId(), id));
+    }
 }

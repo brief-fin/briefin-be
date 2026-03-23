@@ -16,4 +16,6 @@ public interface ScrapsRepository extends JpaRepository<Scraps, Long> {
     Page<Scraps> findByUserIdWithNews(UUID userId, Pageable pageable);
 
     boolean existsByUserIdAndNewsId(UUID userId, Long newsId);
+
+    java.util.Optional<Scraps> findByUserIdAndNewsId(UUID userId, Long newsId);
 }

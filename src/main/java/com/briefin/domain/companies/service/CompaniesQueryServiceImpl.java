@@ -6,6 +6,8 @@ import com.briefin.domain.companies.entity.Companies;
 import com.briefin.domain.companies.repository.CompaniesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -58,6 +60,24 @@ public class CompaniesQueryServiceImpl implements CompaniesQueryService {
                         .changeRate(company.getChangeRate() != null ? company.getChangeRate().doubleValue() : null)
                         .build())
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public Page<CompanyResponseDto> getSearchResultCompanies(String name,Pageable pageable) {
+
+        Page<Companies> companies = companiesRepository.findByNameContaining(name, pageable);
+
+        return companies.map(company -> CompanyResponseDto.builder()
+                .id(company.getId())
+                .name(company.getName())
+                .ticker(company.getTicker())
+                .sector(company.getSector())
+                .logoUrl(company.getLogoUrl())
+                .currentPrice(company.getCurrentPrice() != null ? company.getCurrentPrice().doubleValue() : null)
+                .changeRate(company.getChangeRate() != null ? company.getChangeRate().doubleValue() : null)
+                .isOverseas(company.isOverseas())
+                .build());
+
     }
 
 

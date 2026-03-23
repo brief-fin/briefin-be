@@ -23,28 +23,30 @@ public class KisClient {
     @Value("${kis.app-secret}")
     private String appSecret;
 
+    @Value("${kis.access-token}")
     private String accessToken;
 
+
     // 토큰 발급
-    public String getAccessToken() {
-        Map<String, String> body = Map.of(
-                "grant_type", "client_credentials",
-                "appkey", appKey,
-                "appsecret", appSecret
-        );
-
-        Map response = WebClient.create(baseUrl)
-                .post()
-                .uri("/oauth2/tokenP")
-                .header("Content-Type", "application/json")
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(Map.class)
-                .block();
-
-        this.accessToken = (String) response.get("access_token"); // ← 이거 추가!
-        return this.accessToken;
-    }
+//    public String getAccessToken() {
+//        Map<String, String> body = Map.of(
+//                "grant_type", "client_credentials",
+//                "appkey", appKey,
+//                "appsecret", appSecret
+//        );
+//
+//        Map response = WebClient.create(baseUrl)
+//                .post()
+//                .uri("/oauth2/tokenP")
+//                .header("Content-Type", "application/json")
+//                .bodyValue(body)
+//                .retrieve()
+//                .bodyToMono(Map.class)
+//                .block();
+//
+//        this.accessToken = (String) response.get("access_token"); // ← 이거 추가!
+//        return this.accessToken;
+//    }
 
     // 국내주식 섹터 조회
     public String getDomesticSector(String ticker) {
@@ -112,9 +114,6 @@ public class KisClient {
     }
 
     public List<String> getPopularTickers() {
-        if (accessToken == null) {
-            getAccessToken();
-        }
 
         Map response = WebClient.create(baseUrl)
                 .get()

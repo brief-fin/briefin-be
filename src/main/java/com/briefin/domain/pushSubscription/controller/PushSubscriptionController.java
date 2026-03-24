@@ -56,4 +56,15 @@ public class PushSubscriptionController {
         webPushService.unsubscribe(userId, request.getCompanyId());
         return ResponseEntity.ok(ApiResponse.success("구독 취소 완료"));
     }
+
+    @Operation(summary = "구독 여부 조회", description = "특정 기업 공시 알림 구독 중인지 확인 (로그인 필요)")
+    @GetMapping("/status")
+    public ResponseEntity<ApiResponse<Boolean>> getSubscriptionStatus(
+            @RequestParam Long companyId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UUID userId = UUID.fromString(userDetails.getUsername());
+        boolean subscribed = webPushService.isSubscribed(userId, companyId);
+        return ResponseEntity.ok(ApiResponse.success(subscribed));
+    }
 }

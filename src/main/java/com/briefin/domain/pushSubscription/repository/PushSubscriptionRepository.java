@@ -16,4 +16,6 @@ public interface PushSubscriptionRepository extends JpaRepository<PushSubscripti
 
     // 구독 취소
     void deleteByUserIdAndCompanyId(UUID userId, Long companyId);
+
+    boolean existsByUserIdAndCompanyId(UUID userId, Long companyId);
 }

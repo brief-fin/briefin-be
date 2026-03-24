@@ -97,4 +97,9 @@ public class WebPushServiceImpl implements WebPushService {
             }
         }
     }
+
+    @Override
+    public boolean isSubscribed(UUID userId, Long companyId) {
+        return pushSubscriptionRepository.existsByUserIdAndCompanyId(userId, companyId);
+    }
 }

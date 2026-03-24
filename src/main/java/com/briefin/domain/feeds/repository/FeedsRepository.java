@@ -14,7 +14,7 @@ import java.util.UUID;
 public interface FeedsRepository extends JpaRepository<News, Long> {
 
     @Query(value = """
-            SELECT n.id FROM news n
+            SELECT DISTINCT n.id, n.published_at FROM news n
             JOIN news_companies nc ON n.id = nc.news_id
             JOIN watchlist w ON nc.company_id = w.company_id
             WHERE w.user_id = CAST(:userId AS uuid)

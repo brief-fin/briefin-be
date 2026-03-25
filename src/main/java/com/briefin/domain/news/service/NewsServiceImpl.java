@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -93,6 +94,23 @@ public class NewsServiceImpl implements NewsService {
                 .filter(newsMap::containsKey)
                 .map(id -> NewsConverter.toRelatedDTO(newsMap.get(id), getSummary(id)))
                 .toList();
+    }
+
+    @Override
+    public HomeNewsResponseDTO getHomeNews() {
+        List<NewsListResponseDTO> domestic = newsSummaryRepository
+                .findTop3ByRegionWithNews("국내", PageRequest.of(0, 3))
+                .stream()
+                .map(ns -> NewsConverter.toListDTO(ns.getNews(), ns, List.of()))
+                .toList();
+
+        List<NewsListResponseDTO> foreign = newsSummaryRepository
+                .findTop3ByRegionWithNews("해외", PageRequest.of(0, 3))
+                .stream()
+                .map(ns -> NewsConverter.toListDTO(ns.getNews(), ns, List.of()))
+                .toList();
+
+        return new HomeNewsResponseDTO(domestic, foreign);
     }
 
     private News findNewsById(Long newsId) {

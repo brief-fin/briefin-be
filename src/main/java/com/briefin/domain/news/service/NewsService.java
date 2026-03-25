@@ -5,6 +5,7 @@ import com.briefin.domain.news.dto.*;
 import java.util.List;
 import java.util.UUID;
 
+
 public interface NewsService {
 
     List<NewsListResponseDTO> getNewsList(String category);
@@ -14,4 +15,6 @@ public interface NewsService {
     List<NewsSearchResponseDTO> searchNews(String q);
 
     List<NewsRelatedResponseDTO> getRelatedNews(Long newsId);
+
+    HomeNewsResponseDTO getHomeNews();
 }

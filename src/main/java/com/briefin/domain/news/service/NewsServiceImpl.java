@@ -98,16 +98,23 @@ public class NewsServiceImpl implements NewsService {
 
     @Override
     public HomeNewsResponseDTO getHomeNews() {
-        List<NewsListResponseDTO> domestic = newsSummaryRepository
-                .findTop3ByRegionWithNews("국내", PageRequest.of(0, 3))
-                .stream()
-                .map(ns -> NewsConverter.toListDTO(ns.getNews(), ns, List.of()))
+        List<NewsSummary> domesticSummaries = newsSummaryRepository.findTop3ByRegionWithNews("국내", PageRequest.of(0, 3));
+        List<NewsSummary> foreignSummaries = newsSummaryRepository.findTop3ByRegionWithNews("해외", PageRequest.of(0, 3));
+
+        List<Long> newsIds = java.util.stream.Stream.concat(domesticSummaries.stream(), foreignSummaries.stream())
+                .map(ns -> ns.getNews().getId())
                 .toList();
 
-        List<NewsListResponseDTO> foreign = newsSummaryRepository
-                .findTop3ByRegionWithNews("해외", PageRequest.of(0, 3))
+        Map<Long, List<NewsCompany>> companiesMap = newsCompanyRepository.findByNewsIdIn(newsIds)
                 .stream()
-                .map(ns -> NewsConverter.toListDTO(ns.getNews(), ns, List.of()))
+                .collect(Collectors.groupingBy(nc -> nc.getNews().getId()));
+
+        List<NewsListResponseDTO> domestic = domesticSummaries.stream()
+                .map(ns -> NewsConverter.toListDTO(ns.getNews(), ns, companiesMap.getOrDefault(ns.getNews().getId(), List.of())))
+                .toList();
+
+        List<NewsListResponseDTO> foreign = foreignSummaries.stream()
+                .map(ns -> NewsConverter.toListDTO(ns.getNews(), ns, companiesMap.getOrDefault(ns.getNews().getId(), List.of())))
                 .toList();
 
         return new HomeNewsResponseDTO(domestic, foreign);

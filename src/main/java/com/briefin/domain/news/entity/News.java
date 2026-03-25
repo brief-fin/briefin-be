@@ -31,4 +31,7 @@ public class News extends BaseEntity {
     private String originalUrl;
 
     private LocalDateTime publishedAt;
+
+    @Column(columnDefinition = "TEXT")
+    private String thumbnailUrl;
 }

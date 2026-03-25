@@ -3,10 +3,12 @@ package com.briefin.domain.disclosures.service;
 import com.briefin.domain.companies.entity.Companies;
 import com.briefin.domain.disclosures.dto.DisclosureItem;
 import com.briefin.domain.disclosures.entity.Disclosures;
+import com.briefin.domain.disclosures.event.DisclosureSavedEvent;
 import com.briefin.domain.disclosures.repository.DisclosuresRepository;
 import com.briefin.domain.pushSubscription.service.WebPushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +21,7 @@ import java.time.format.DateTimeFormatter;
 public class DisclosureSaveService {
 
     private final DisclosuresRepository disclosuresRepository;
-    private final WebPushService webPushService;  // 추가
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
@@ -37,10 +39,8 @@ public class DisclosureSaveService {
                 .build());
 
         // 공시 저장 후 구독자에게 푸시 발송
-        webPushService.sendToSubscribers(
-                company.getId(),
-                company.getName() + " 새 공시",
-                item.getReport_nm()
+        applicationEventPublisher.publishEvent(
+                new DisclosureSavedEvent(company.getId(), company.getName(), item.getReport_nm())
         );
     }
 

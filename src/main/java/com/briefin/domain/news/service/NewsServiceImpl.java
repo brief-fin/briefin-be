@@ -40,7 +40,8 @@ public class NewsServiceImpl implements NewsService {
                 .map(ns -> ns.getNews().getId())
                 .toList();
 
-        Map<Long, List<NewsCompany>> companiesMap = newsCompanyRepository.findByNewsIdIn(newsIds)
+        Map<Long, List<NewsCompany>> companiesMap = newsIds.isEmpty() ? Map.of() :
+                newsCompanyRepository.findByNewsIdIn(newsIds)
                 .stream()
                 .collect(Collectors.groupingBy(nc -> nc.getNews().getId()));
 
@@ -105,7 +106,8 @@ public class NewsServiceImpl implements NewsService {
                 .map(ns -> ns.getNews().getId())
                 .toList();
 
-        Map<Long, List<NewsCompany>> companiesMap = newsCompanyRepository.findByNewsIdIn(newsIds)
+        Map<Long, List<NewsCompany>> companiesMap = newsIds.isEmpty() ? Map.of() :
+                newsCompanyRepository.findByNewsIdIn(newsIds)
                 .stream()
                 .collect(Collectors.groupingBy(nc -> nc.getNews().getId()));
 

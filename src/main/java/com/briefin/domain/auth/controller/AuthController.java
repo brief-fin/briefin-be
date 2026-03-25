@@ -15,6 +15,7 @@ import com.briefin.domain.auth.dto.response.SignUpResponse;
 import com.briefin.domain.auth.dto.result.LoginResult;
 import com.briefin.domain.auth.dto.result.RefreshTokenResult;
 import com.briefin.domain.auth.service.AuthService;
+import com.briefin.global.apipayload.ApiResponse;
 import com.briefin.global.security.util.CookieUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,13 +31,13 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest request) {
+    public ResponseEntity<ApiResponse<SignUpResponse>> signUp(@Valid @RequestBody SignUpRequest request) {
         SignUpResponse response = authService.signUp(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
+    public ResponseEntity<ApiResponse<LoginResponse>> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletResponse response
     ) {
@@ -44,15 +45,14 @@ public class AuthController {
 
         CookieUtil.addRefreshTokenCookie(response, result.getRefreshToken());
 
-        return ResponseEntity.ok(
-                LoginResponse.builder()
-                        .accessToken(result.getAccessToken())
-                        .build()
-        );
+        LoginResponse body = LoginResponse.builder()
+                .accessToken(result.getAccessToken())
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(body));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<RefreshTokenResponse> refresh(
+    public ResponseEntity<ApiResponse<RefreshTokenResponse>> refresh(
             HttpServletRequest request,
             HttpServletResponse response
     ) {
@@ -62,15 +62,14 @@ public class AuthController {
 
         CookieUtil.addRefreshTokenCookie(response, result.getRefreshToken());
 
-        return ResponseEntity.ok(
-                RefreshTokenResponse.builder()
-                        .accessToken(result.getAccessToken())
-                        .build()
-        );
+        RefreshTokenResponse body = RefreshTokenResponse.builder()
+                .accessToken(result.getAccessToken())
+                .build();
+        return ResponseEntity.ok(ApiResponse.success(body));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(
+    public ResponseEntity<ApiResponse<Void>> logout(
             HttpServletRequest request,
             HttpServletResponse response
     ) {
@@ -79,6 +78,6 @@ public class AuthController {
         authService.logout(refreshToken);
         CookieUtil.deleteRefreshTokenCookie(response);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.<Void>success(null));
     }
 }

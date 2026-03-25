@@ -49,9 +49,14 @@ dependencies {
 	implementation("com.pgvector:pgvector:0.1.6")
 	implementation("org.hibernate.orm:hibernate-vector:6.6.13.Final")
 
+	implementation("nl.martijndwars:web-push:5.1.1")
+	implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
 
 	implementation("io.netty:netty-resolver-dns-native-macos:4.1.101.Final:osx-aarch_64")
+
+	implementation ("org.springframework.boot:spring-boot-starter-data-redis")
 }
 
 tasks.withType<Test> {

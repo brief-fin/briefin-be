@@ -7,6 +7,7 @@ public record NewsListResponseDTO(
         String title,
         String summary,
         String category,
+        String region,
         String press,
         String publishedAt,
         List<String> relatedCompanies

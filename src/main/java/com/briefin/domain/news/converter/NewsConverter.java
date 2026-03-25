@@ -16,6 +16,7 @@ public class NewsConverter {
                 news.getTitle(),
                 summary != null ? summary.getSummaryLine() : null,
                 summary != null ? summary.getCategory() : null,
+                summary != null ? summary.getRegion() : null,
                 news.getSource(),
                 news.getPublishedAt() != null ? news.getPublishedAt().format(DATE_FORMATTER) : null,
                 toCompanyNames(companies)

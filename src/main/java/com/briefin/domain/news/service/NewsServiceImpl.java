@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -93,6 +94,30 @@ public class NewsServiceImpl implements NewsService {
                 .filter(newsMap::containsKey)
                 .map(id -> NewsConverter.toRelatedDTO(newsMap.get(id), getSummary(id)))
                 .toList();
+    }
+
+    @Override
+    public HomeNewsResponseDTO getHomeNews() {
+        List<NewsSummary> domesticSummaries = newsSummaryRepository.findTop3ByRegionWithNews("국내", PageRequest.of(0, 3));
+        List<NewsSummary> foreignSummaries = newsSummaryRepository.findTop3ByRegionWithNews("해외", PageRequest.of(0, 3));
+
+        List<Long> newsIds = java.util.stream.Stream.concat(domesticSummaries.stream(), foreignSummaries.stream())
+                .map(ns -> ns.getNews().getId())
+                .toList();
+
+        Map<Long, List<NewsCompany>> companiesMap = newsCompanyRepository.findByNewsIdIn(newsIds)
+                .stream()
+                .collect(Collectors.groupingBy(nc -> nc.getNews().getId()));
+
+        List<NewsListResponseDTO> domestic = domesticSummaries.stream()
+                .map(ns -> NewsConverter.toListDTO(ns.getNews(), ns, companiesMap.getOrDefault(ns.getNews().getId(), List.of())))
+                .toList();
+
+        List<NewsListResponseDTO> foreign = foreignSummaries.stream()
+                .map(ns -> NewsConverter.toListDTO(ns.getNews(), ns, companiesMap.getOrDefault(ns.getNews().getId(), List.of())))
+                .toList();
+
+        return new HomeNewsResponseDTO(domestic, foreign);
     }
 
     private News findNewsById(Long newsId) {

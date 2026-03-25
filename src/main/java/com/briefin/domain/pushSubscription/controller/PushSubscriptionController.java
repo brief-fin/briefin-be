@@ -3,12 +3,13 @@ package com.briefin.domain.pushSubscription.controller;
 import com.briefin.domain.pushSubscription.dto.PushSubscriptionRequestDTO;
 import com.briefin.domain.pushSubscription.service.WebPushService;
 import com.briefin.global.apipayload.ApiResponse;
+import com.briefin.global.security.jwt.JwtUserInfo;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -32,10 +33,10 @@ public class PushSubscriptionController {
     @Operation(summary = "푸시 구독", description = "특정 기업 공시 알림 구독 (로그인 필요)")
     @PostMapping("/subscribe")
     public ResponseEntity<ApiResponse<?>> subscribe(
-            @RequestBody PushSubscriptionRequestDTO.SubscribeRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
+            @Valid @RequestBody PushSubscriptionRequestDTO.SubscribeRequest request,
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo
     ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+        UUID userId = jwtUserInfo.userId();
         webPushService.subscribe(
                 userId,
                 request.getCompanyId(),
@@ -50,20 +51,19 @@ public class PushSubscriptionController {
     @DeleteMapping("/unsubscribe")
     public ResponseEntity<ApiResponse<?>> unsubscribe(
             @RequestBody PushSubscriptionRequestDTO.UnsubscribeRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo
     ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+        UUID userId = jwtUserInfo.userId();
         webPushService.unsubscribe(userId, request.getCompanyId());
         return ResponseEntity.ok(ApiResponse.success("구독 취소 완료"));
     }
 
-    @Operation(summary = "구독 여부 조회", description = "특정 기업 공시 알림 구독 중인지 확인 (로그인 필요)")
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<Boolean>> getSubscriptionStatus(
             @RequestParam Long companyId,
-            @AuthenticationPrincipal UserDetails userDetails
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo
     ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+        UUID userId = jwtUserInfo.userId();
         boolean subscribed = webPushService.isSubscribed(userId, companyId);
         return ResponseEntity.ok(ApiResponse.success(subscribed));
     }

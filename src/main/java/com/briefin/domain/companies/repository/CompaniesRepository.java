@@ -4,10 +4,12 @@ import com.briefin.domain.companies.entity.Companies;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,5 +25,11 @@ public interface CompaniesRepository extends JpaRepository<Companies, Long> {
     Optional<Companies> findByCorpCode(String corpCode);
 
 
+    Optional<Object> findByTicker(String ticker);
 
+    @Modifying
+    @Query("UPDATE Companies c SET c.currentPrice = :currentPrice, c.changeRate = :changeRate WHERE c.ticker = :ticker")
+    void updatePrice(@Param("ticker") String ticker,
+                     @Param("currentPrice") BigDecimal currentPrice,
+                     @Param("changeRate") BigDecimal changeRate);
 }

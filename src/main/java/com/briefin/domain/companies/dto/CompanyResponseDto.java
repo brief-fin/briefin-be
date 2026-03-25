@@ -1,5 +1,6 @@
 package com.briefin.domain.companies.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import java.util.List;
@@ -27,4 +28,6 @@ public class CompanyResponseDto {
         private String name;
         private String ticker;
     }
+
+
 }

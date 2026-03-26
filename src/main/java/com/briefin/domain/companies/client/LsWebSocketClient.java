@@ -138,11 +138,13 @@ public class LsWebSocketClient {
     }
 
     private void reconnect() {
-        try {
-            Thread.sleep(3000);
-            connect();
-        } catch (Exception e) {
-            log.error("재연결 실패", e);
-        }
+        new Thread(() -> {
+            try {
+                Thread.sleep(3000);
+                connect();
+            } catch (Exception e) {
+                log.error("재연결 실패", e);
+            }
+        }).start();
     }
 }

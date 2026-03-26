@@ -1,5 +1,6 @@
 package com.briefin.domain.companies.client;
 
+import com.briefin.domain.companies.manager.KisTokenManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -12,7 +13,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class KisClient {
 
-    private final WebClient webClient;
+    private final KisTokenManager kisTokenManager;
 
     @Value("${kis.base-url}")
     private String baseUrl;
@@ -23,32 +24,6 @@ public class KisClient {
     @Value("${kis.app-secret}")
     private String appSecret;
 
-    @Value("${kis.access-token}")
-    private String accessToken;
-
-
-    // 토큰 발급
-//    public String getAccessToken() {
-//        Map<String, String> body = Map.of(
-//                "grant_type", "client_credentials",
-//                "appkey", appKey,
-//                "appsecret", appSecret
-//        );
-//
-//        Map response = WebClient.create(baseUrl)
-//                .post()
-//                .uri("/oauth2/tokenP")
-//                .header("Content-Type", "application/json")
-//                .bodyValue(body)
-//                .retrieve()
-//                .bodyToMono(Map.class)
-//                .block();
-//
-//        this.accessToken = (String) response.get("access_token"); // ← 이거 추가!
-//        return this.accessToken;
-//    }
-
-    // 국내주식 섹터 조회
     public String getDomesticSector(String ticker) {
         Map response = WebClient.create(baseUrl)
                 .get()
@@ -57,7 +32,7 @@ public class KisClient {
                         .queryParam("PRDT_TYPE_CD", "300")
                         .queryParam("PDNO", ticker)
                         .build())
-                .header("authorization", "Bearer " + accessToken)
+                .header("authorization", "Bearer " + kisTokenManager.getToken())
                 .header("appkey", appKey)
                 .header("appsecret", appSecret)
                 .header("tr_id", "CTPF1002R")
@@ -70,7 +45,6 @@ public class KisClient {
         return (String) output.get("idx_bztp_mcls_cd_name");
     }
 
-    // 해외주식 현재가 조회
     public Map getOverseasPrice(String ticker) {
         Map response = WebClient.create(baseUrl)
                 .get()
@@ -80,7 +54,7 @@ public class KisClient {
                         .queryParam("EXCD", "NAS")
                         .queryParam("SYMB", ticker)
                         .build())
-                .header("authorization", "Bearer " + accessToken)
+                .header("authorization", "Bearer " + kisTokenManager.getToken())
                 .header("appkey", appKey)
                 .header("appsecret", appSecret)
                 .header("tr_id", "HHDFS00000300")
@@ -92,7 +66,6 @@ public class KisClient {
         return (Map) response.get("output");
     }
 
-    // 국내주식 종목 정보 전체 조회
     public Map<String, Object> getDomesticStockInfo(String ticker) {
         Map response = WebClient.create(baseUrl)
                 .get()
@@ -101,7 +74,7 @@ public class KisClient {
                         .queryParam("PRDT_TYPE_CD", "300")
                         .queryParam("PDNO", ticker)
                         .build())
-                .header("authorization", "Bearer " + accessToken)
+                .header("authorization", "Bearer " + kisTokenManager.getToken())
                 .header("appkey", appKey)
                 .header("appsecret", appSecret)
                 .header("tr_id", "CTPF1002R")
@@ -114,11 +87,10 @@ public class KisClient {
     }
 
     public List<String> getPopularTickers() {
-
         Map response = WebClient.create(baseUrl)
                 .get()
                 .uri("/uapi/domestic-stock/v1/ranking/hts-top-view")
-                .header("authorization", "Bearer " + accessToken)
+                .header("authorization", "Bearer " + kisTokenManager.getToken())
                 .header("appkey", appKey)
                 .header("appsecret", appSecret)
                 .header("tr_id", "HHMCM000100C0")
@@ -137,4 +109,3 @@ public class KisClient {
                 .collect(java.util.stream.Collectors.toList());
     }
 }
-

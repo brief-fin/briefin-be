@@ -44,13 +44,9 @@ public class Companies extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String corpCode;
 
-    @Column(nullable = false)
-    private String corpName;
-
-    private String stockCode;
 
     public void update(String corpName, String stockCode) {
-        this.corpName = corpName;
-        this.stockCode = stockCode;
+        this.name = corpName;
+        this.ticker = stockCode;
     }
 }

@@ -37,19 +37,17 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/feeds/**").authenticated()
-                .requestMatchers(HttpMethod.GET,
-                        "/api/home/**",
-                        "/api/news",
-                        "/api/news/search",
-                        "/api/news/*/related",
-                        "/api/disclosures",
-                        "/companies/popular",
-                        "/companies/search",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/v3/api-docs/**",
-                        "/companies/*/price",
-                        "/webjars/**").permitAll()
+                            .requestMatchers(HttpMethod.GET,
+                                    "/api/home/**",
+                                    "/api/news",
+                                    "/api/news/search",
+                                    "/api/news/*/related",
+                                    "/api/disclosures",
+                                    "/api/companies/popular",
+                                    "/api/companies/search",
+                                    "/api/companies/*/price"
+                            ).permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/disclosures").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -50,14 +50,15 @@ public class PushSubscriptionController {
     @Operation(summary = "푸시 구독 취소", description = "특정 기업 공시 알림 구독 취소 (로그인 필요)")
     @DeleteMapping("/unsubscribe")
     public ResponseEntity<ApiResponse<?>> unsubscribe(
-            @RequestBody PushSubscriptionRequestDTO.UnsubscribeRequest request,
+            @RequestParam Long companyId,
             @AuthenticationPrincipal JwtUserInfo jwtUserInfo
     ) {
         UUID userId = jwtUserInfo.userId();
-        webPushService.unsubscribe(userId, request.getCompanyId());
+        webPushService.unsubscribe(userId, companyId);
         return ResponseEntity.ok(ApiResponse.success("구독 취소 완료"));
     }
 
+    @Operation(summary = "푸시 구독 여부 조회", description = "특정 기업 공시 알림 구독 여부 조회")
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<Boolean>> getSubscriptionStatus(
             @RequestParam Long companyId,

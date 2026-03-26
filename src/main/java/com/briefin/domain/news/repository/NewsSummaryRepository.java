@@ -15,10 +15,10 @@ public interface NewsSummaryRepository extends JpaRepository<NewsSummary, Long> 
 
     Optional<NewsSummary> findByNewsId(Long newsId);
 
-    @Query("SELECT ns FROM NewsSummary ns JOIN FETCH ns.news")
+    @Query("SELECT ns FROM NewsSummary ns JOIN FETCH ns.news ORDER BY ns.news.publishedAt DESC")
     List<NewsSummary> findAllWithNews();
 
-    @Query("SELECT ns FROM NewsSummary ns JOIN FETCH ns.news WHERE ns.category = :category")
+    @Query("SELECT ns FROM NewsSummary ns JOIN FETCH ns.news WHERE ns.category = :category ORDER BY ns.news.publishedAt DESC")
     List<NewsSummary> findByCategoryWithNews(String category);
 
     List<NewsSummary> findByNewsIdIn(List<Long> newsIds);

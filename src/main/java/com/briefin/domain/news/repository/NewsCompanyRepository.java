@@ -2,6 +2,8 @@ package com.briefin.domain.news.repository;
 
 import com.briefin.domain.news.entity.NewsCompany;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -9,7 +11,9 @@ import java.util.List;
 @Repository
 public interface NewsCompanyRepository extends JpaRepository<NewsCompany, Long> {
 
-    List<NewsCompany> findByNewsId(Long newsId);
+    @Query("SELECT nc FROM NewsCompany nc JOIN FETCH nc.company WHERE nc.news.id = :newsId")
+    List<NewsCompany> findByNewsId(@Param("newsId") Long newsId);
 
-    List<NewsCompany> findByNewsIdIn(List<Long> newsIds);
+    @Query("SELECT nc FROM NewsCompany nc JOIN FETCH nc.company WHERE nc.news.id IN :newsIds")
+    List<NewsCompany> findByNewsIdIn(@Param("newsIds") List<Long> newsIds);
 }

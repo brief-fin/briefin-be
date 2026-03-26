@@ -63,7 +63,7 @@ public class NewsConverter {
 
     private static List<String> toCompanyNames(List<NewsCompany> companies) {
         return companies.stream()
-                .map(nc -> nc.getCompany().getId().toString())
+                .map(nc -> nc.getCompany().getName())
                 .toList();
     }
 }

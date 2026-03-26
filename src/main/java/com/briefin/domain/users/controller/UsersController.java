@@ -7,6 +7,7 @@ import com.briefin.domain.users.service.ScrapsService;
 import com.briefin.domain.users.service.UsersService;
 import com.briefin.domain.users.service.WatchlistService;
 import com.briefin.global.apipayload.ApiResponse;
+import com.briefin.global.security.util.CookieUtil;
 import com.briefin.global.security.jwt.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequiredArgsConstructor
@@ -61,6 +63,18 @@ public class UsersController {
     public ResponseEntity<Void> removeWatch(@PathVariable Long id) {
         watchlistService.removeWatch(id, SecurityUtils.getCurrentUserId());
         return ResponseEntity.noContent().build();
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse<Void>> deleteMe(
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo,
+            HttpServletResponse response
+    ) {
+        usersService.deleteUser(jwtUserInfo.userId());
+
+        CookieUtil.deleteRefreshTokenCookie(response);
+
+        return ResponseEntity.ok(ApiResponse.<Void>success(null));
     }
 
 }

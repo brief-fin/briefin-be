@@ -28,4 +28,7 @@ public class NewsSummary extends BaseEntity {
 
     @Column(length = 20)
     private String region;
+
+    @Column(columnDefinition = "TEXT")
+    private String titleKo;
 }

@@ -24,19 +24,31 @@ public class ChatGptClient {
 
     private final WebClient openAiWebClient;
 
+    private String cleanRawText(String rawText) {
+        log.info("=== RAW TEXT 앞 200자 ===\n[{}]", rawText.substring(0, Math.min(200, rawText.length())));
+        String cleaned = rawText
+                .replaceAll("잠시만 기다려주세요\\.\\s*", "")  // 로딩 텍스트 제거
+                .replaceAll("\\b(코|유|넥|기)\\s+(?=\\S)", "");   // 접두어 제거
+        log.info("=== CLEANED TEXT 앞 200자 ===\n[{}]", cleaned.substring(0, Math.min(200, cleaned.length())));
+        return cleaned;
+    }
+
     public String summarize(String rawText) {
         if (rawText == null || rawText.isBlank()) {
             log.warn("요약할 원문이 없습니다.");
             return null;
         }
 
-        String truncated = rawText.length() > 3000
-                ? rawText.substring(0, 3000) + "..."
-                : rawText;
+        String cleaned = cleanRawText(rawText);
+
+        String truncated = cleaned.length() > 3000
+                ? cleaned.substring(0, 3000) + "..."
+                : cleaned;
 
         String prompt = """
                 다음은 국내 상장 기업의 공시 원문입니다.
-                투자자가 이해하기 쉽게 3~5문장으로 요약해주세요.
+                투자자가 이해하기 쉽게 정확히 3문장으로 요약해주세요.
+                반드시 각 문장을 줄바꿈으로 구분하여 3줄로 작성해주세요.
                 
                 [공시 내용]
                 %s
@@ -58,7 +70,6 @@ public class ChatGptClient {
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(body)
                     .retrieve()
-                    // 429 Rate Limit은 retryWhen에서 처리하므로 여기선 그 외 4xx만 에러 처리
                     .onStatus(
                             status -> status.is4xxClientError() && status.value() != 429,
                             response -> response.bodyToMono(String.class)
@@ -74,7 +85,6 @@ public class ChatGptClient {
                                     ))
                     )
                     .bodyToMono(Map.class)
-                    // 429 Rate Limit 시 최대 3회, 요청마다 2초씩 늘어나는 backoff 재시도
                     .retryWhen(Retry.backoff(3, Duration.ofSeconds(2))
                             .filter(ex -> ex instanceof WebClientResponseException.TooManyRequests)
                             .onRetryExhaustedThrow((spec, signal) ->
@@ -92,7 +102,7 @@ public class ChatGptClient {
                         }
                         return (String) message.get("content");
                     })
-                    .block(); // 기존 동기 흐름 유지 (서비스가 동기면 block() 사용)
+                    .block();
 
         } catch (Exception e) {
             log.error("ChatGPT 요약 실패: {}", e.getMessage());
@@ -106,30 +116,34 @@ public class ChatGptClient {
             return null;
         }
 
-        String truncated = rawText.length() > 3000
-                ? rawText.substring(0, 3000) + "..."
-                : rawText;
+        String cleaned = cleanRawText(rawText);
+
+        String truncated = cleaned.length() > 3000
+                ? cleaned.substring(0, 3000) + "..."
+                : cleaned;
 
         String prompt = """
-            다음은 국내 상장 기업의 공시 원문입니다.
-            투자자가 이해하기 쉽도록 아래 형식에 맞춰 분석해주세요.
-            
-            ## 핵심 포인트
-            - (투자자 관점에서 중요한 내용 3가지를 bullet로)
-            
-            ## 상세 내용
-            (공시의 주요 내용을 항목별로 설명. 계약 금액, 기간, 상대방 등 구체적 수치 포함)
-            
-            ## 투자 의견
-            (이 공시가 호재인지 악재인지, 그 이유를 2~3문장으로)
-            
-            [공시 내용]
-            %s
-            """.formatted(truncated);
+                다음은 국내 상장 기업의 공시 원문입니다.
+                투자자가 이해하기 쉽도록 아래 형식에 맞춰 분석해주세요.
+                
+                ## 핵심 포인트
+                - (첫 번째 핵심 포인트)
+                - (두 번째 핵심 포인트)
+                - (세 번째 핵심 포인트)
+                
+                ## 상세 내용
+                (공시의 주요 내용을 항목별로 설명. 계약 금액, 기간, 상대방 등 구체적 수치 포함)
+                
+                ## 투자 의견
+                (이 공시가 호재인지 악재인지, 그 이유를 2~3문장으로)
+                
+                [공시 내용]
+                %s
+                """.formatted(truncated);
 
         Map<String, Object> body = Map.of(
                 "model", "gpt-4o-mini",
-                "max_tokens", 1000,  // 상세 요약은 더 길게
+                "max_tokens", 1000,
                 "messages", List.of(
                         Map.of("role", "system", "content", "당신은 주식 공시 분석 전문가입니다."),
                         Map.of("role", "user", "content", prompt)

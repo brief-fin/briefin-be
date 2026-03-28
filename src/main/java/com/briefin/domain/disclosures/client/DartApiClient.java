@@ -112,6 +112,16 @@ public class DartApiClient {
                     .timeout(10_000)
                     .get();
 
+            // 네비게이션/UI 요소 제거
+            bodyDoc.select("nav, header, footer, script, style, .navigation, #toolbar").remove();
+
+            // table이 있으면 table 텍스트 위주로 추출 (공시 본문은 보통 table)
+            String tableText = bodyDoc.select("table").text();
+            if (!tableText.isBlank()) {
+                return tableText;
+            }
+
+            // table 없으면 body 전체
             return bodyDoc.body().text();
 
         } catch (IOException e) {

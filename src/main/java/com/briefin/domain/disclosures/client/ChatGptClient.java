@@ -1,5 +1,8 @@
 package com.briefin.domain.disclosures.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,9 +14,11 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -25,12 +30,14 @@ public class ChatGptClient {
     private String openAiKey;
 
     private final WebClient openAiWebClient;
+    private final ObjectMapper objectMapper;
+
+    private static final Set<String> ALLOWED_SENTIMENTS = Set.of("호재", "악재", "중립");
 
     private String cleanRawText(String rawText) {
-        String cleaned = rawText
-                .replaceAll("잠시만 기다려주세요\\.\\s*", "")  // 로딩 텍스트 제거
-                .replaceAll("\\b(코|유|넥|기)\\s+(?=\\S)", "");   // 접두어 제거
-        return cleaned;
+        return rawText
+                .replaceAll("잠시만 기다려주세요\\.\\s*", "")
+                .replaceAll("\\b(코|유|넥|기)\\s+(?=\\S)", "");
     }
 
     public String summarize(String rawText) {
@@ -40,6 +47,10 @@ public class ChatGptClient {
         }
 
         String cleaned = cleanRawText(rawText);
+        if (cleaned.isBlank()) {
+            log.warn("정제 후 요약할 원문이 비어 있습니다.");
+            return null;
+        }
 
         String truncated = cleaned.length() > 3000
                 ? cleaned.substring(0, 3000) + "..."
@@ -103,14 +114,12 @@ public class ChatGptClient {
                         }
                         String content = (String) message.get("content");
 
-                        // \n이 없으면 문장 단위로 강제 분리
                         if (content != null && !content.contains("\n")) {
                             content = content
                                     .replaceAll("(?<=[다요])\\. ", "\n")
                                     .replaceAll("(?<=[다요])\\.$", "");
                         }
 
-                        // 각 문장 끝 온점 통일 (없으면 추가, 있으면 유지)
                         if (content != null) {
                             content = Arrays.stream(content.split("\n"))
                                     .map(String::trim)
@@ -124,7 +133,7 @@ public class ChatGptClient {
                     .block();
 
         } catch (Exception e) {
-            log.error("ChatGPT 요약 실패: {}", e.getMessage());
+            log.error("ChatGPT 요약 실패: {}", e.getMessage(), e);
             return null;
         }
     }
@@ -136,6 +145,10 @@ public class ChatGptClient {
         }
 
         String cleaned = cleanRawText(rawText);
+        if (cleaned.isBlank()) {
+            log.warn("정제 후 상세 요약할 원문이 비어 있습니다.");
+            return null;
+        }
 
         String truncated = cleaned.length() > 3000
                 ? cleaned.substring(0, 3000) + "..."
@@ -202,16 +215,78 @@ public class ChatGptClient {
                     )
                     .map(response -> {
                         List<Map> choices = (List<Map>) response.get("choices");
-                        if (choices == null || choices.isEmpty()) throw new RuntimeException("choices 비어있음");
+                        if (choices == null || choices.isEmpty()) {
+                            throw new RuntimeException("choices 비어있음");
+                        }
                         Map message = (Map) choices.get(0).get("message");
-                        if (message == null) throw new RuntimeException("message null");
-                        return (String) message.get("content");
+                        if (message == null) {
+                            throw new RuntimeException("message null");
+                        }
+
+                        String content = (String) message.get("content");
+                        validateDetailSummaryJson(content);
+                        return content;
                     })
                     .block();
 
         } catch (Exception e) {
-            log.error("ChatGPT 요약 실패", e);
-            throw new IllegalStateException("ChatGPT 요약 실패", e);
+            log.error("ChatGPT 상세 요약 실패", e);
+            throw new IllegalStateException("ChatGPT 상세 요약 실패", e);
+        }
+    }
+
+    private void validateDetailSummaryJson(String content) {
+        if (content == null || content.isBlank()) {
+            throw new IllegalStateException("상세 요약 응답이 비어 있습니다.");
+        }
+
+        try {
+            Map<String, Object> json = objectMapper.readValue(
+                    content, new TypeReference<Map<String, Object>>() {}
+            );
+
+            List<String> errors = new ArrayList<>();
+
+            Object keyPointsObj = json.get("keyPoints");
+            Object detailedContentObj = json.get("detailedContent");
+            Object sentimentObj = json.get("sentiment");
+            Object investmentAnalysisObj = json.get("investmentAnalysis");
+
+            if (!(keyPointsObj instanceof List<?> keyPointsList)) {
+                errors.add("keyPoints가 배열이 아닙니다.");
+            } else {
+                if (keyPointsList.size() != 3) {
+                    errors.add("keyPoints는 정확히 3개여야 합니다.");
+                }
+
+                boolean hasInvalidPoint = keyPointsList.stream()
+                        .anyMatch(item -> !(item instanceof String s) || s.isBlank());
+
+                if (hasInvalidPoint) {
+                    errors.add("keyPoints의 모든 항목은 비어 있지 않은 문자열이어야 합니다.");
+                }
+            }
+
+            if (!(detailedContentObj instanceof String detailedContent) || detailedContent.isBlank()) {
+                errors.add("detailedContent는 비어 있지 않은 문자열이어야 합니다.");
+            }
+
+            if (!(sentimentObj instanceof String sentiment) || !ALLOWED_SENTIMENTS.contains(sentiment)) {
+                errors.add("sentiment는 호재, 악재, 중립 중 하나여야 합니다.");
+            }
+
+            if (!(investmentAnalysisObj instanceof String investmentAnalysis) || investmentAnalysis.isBlank()) {
+                errors.add("investmentAnalysis는 비어 있지 않은 문자열이어야 합니다.");
+            }
+
+            if (!errors.isEmpty()) {
+                log.error("상세 요약 JSON 검증 실패: {}", errors);
+                throw new IllegalStateException("상세 요약 JSON contract 위반: " + String.join(", ", errors));
+            }
+
+        } catch (JsonProcessingException e) {
+            log.error("상세 요약 JSON 파싱 실패. 원본 응답: {}", content, e);
+            throw new IllegalStateException("상세 요약 응답이 유효한 JSON이 아닙니다.", e);
         }
     }
 }

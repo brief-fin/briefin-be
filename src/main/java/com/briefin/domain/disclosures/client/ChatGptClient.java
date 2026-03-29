@@ -13,6 +13,8 @@ import reactor.util.retry.Retry;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -46,13 +48,13 @@ public class ChatGptClient {
                 : cleaned;
 
         String prompt = """
-                다음은 국내 상장 기업의 공시 원문입니다.
-                투자자가 이해하기 쉽게 정확히 3문장으로 요약해주세요.
-                반드시 각 문장을 줄바꿈으로 구분하여 3줄로 작성해주세요.
-                
-                [공시 내용]
-                %s
-                """.formatted(truncated);
+            다음은 국내 상장 기업의 공시 원문입니다.
+            투자자가 이해하기 쉽게 정확히 3문장으로 요약해주세요.
+            반드시 각 문장을 줄바꿈으로 구분하여 3줄로 작성해주세요.
+            
+            [공시 내용]
+            %s
+            """.formatted(truncated);
 
         Map<String, Object> body = Map.of(
                 "model", "gpt-4o-mini",
@@ -100,7 +102,25 @@ public class ChatGptClient {
                         if (message == null) {
                             throw new RuntimeException("ChatGPT 응답 message가 null입니다.");
                         }
-                        return (String) message.get("content");
+                        String content = (String) message.get("content");
+
+                        // \n이 없으면 문장 단위로 강제 분리
+                        if (content != null && !content.contains("\n")) {
+                            content = content
+                                    .replaceAll("(?<=[다요])\\. ", "\n")
+                                    .replaceAll("(?<=[다요])\\.$", "");
+                        }
+
+                        // 각 문장 끝 온점 통일 (없으면 추가, 있으면 유지)
+                        if (content != null) {
+                            content = Arrays.stream(content.split("\n"))
+                                    .map(String::trim)
+                                    .filter(s -> !s.isBlank())
+                                    .map(s -> s.endsWith(".") ? s : s + ".")
+                                    .collect(Collectors.joining("\n"));
+                        }
+
+                        return content;
                     })
                     .block();
 

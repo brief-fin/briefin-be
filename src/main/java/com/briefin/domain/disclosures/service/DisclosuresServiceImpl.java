@@ -41,6 +41,7 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                 .companyName(d.getCompany().getName())
                 .ticker(d.getCompany().getTicker())
                 .summary(d.getSummary())
+                .category(d.getCategory())
                 .build());
     }
 
@@ -61,6 +62,7 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                 .ticker(disclosure.getCompany().getTicker())
                 .summary(disclosure.getSummary())
                 .summaryDetail(disclosure.getSummaryDetail())
+                .category(disclosure.getCategory())
                 .build();
     }
 
@@ -77,6 +79,7 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                         .title(d.getTitle())
                         .disclosedAt(d.getDisclosedAt().toString())
                         .summary(d.getSummary())
+                        .category(d.getCategory())
                         .build())
                 .toList();
     }

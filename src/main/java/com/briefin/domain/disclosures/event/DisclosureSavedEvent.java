@@ -4,6 +4,7 @@ public record DisclosureSavedEvent(
         Long companyId,
         Long disclosureId,
         String companyName,
-        String reportName
+        String reportName,
+        String category
 ) {
 }

@@ -19,6 +19,7 @@ public class DisclosuresResponseDTO {
         private String companyName;
         private String ticker;
         private String summary;
+        private String category;
     }
 
     @Getter
@@ -54,6 +55,7 @@ public class DisclosuresResponseDTO {
         private String ticker;
         private String summary;
         private String summaryDetail;
+        private String category;
     }
 
     @Getter
@@ -64,5 +66,6 @@ public class DisclosuresResponseDTO {
         private String title;
         private String disclosedAt;
         private String summary;
+        private String category;
     }
 }

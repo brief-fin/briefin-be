@@ -85,14 +85,24 @@ public class DartApiClient {
         }
     }
 
+    private static final String[] PBLNTF_TYPES = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
+
     // 전체 공시 목록 조회
     public List<DisclosureItem> fetchAllDisclosures(String startDate, String endDate) {
-        return fetchList(null, startDate, endDate);
+        List<DisclosureItem> all = new ArrayList<>();
+        for (String type : PBLNTF_TYPES) {
+            all.addAll(fetchList(null, startDate, endDate, type));
+        }
+        return all;
     }
 
     // 기업별 공시 목록 조회
     public List<DisclosureItem> fetchDisclosuresByCorpCode(String corpCode, String startDate, String endDate) {
-        return fetchList(corpCode, startDate, endDate);
+        List<DisclosureItem> all = new ArrayList<>();
+        for (String type : PBLNTF_TYPES) {
+            all.addAll(fetchList(corpCode, startDate, endDate, type));
+        }
+        return all;
     }
 
     // 공시 원문 텍스트 추출
@@ -131,7 +141,7 @@ public class DartApiClient {
     }
 
     // 공통 목록 조회 (페이지네이션)
-    private List<DisclosureItem> fetchList(String corpCode, String startDate, String endDate) {
+    private List<DisclosureItem> fetchList(String corpCode, String startDate, String endDate, String pblntfTy) {
         List<DisclosureItem> allItems = new ArrayList<>();
         int pageNo = 1;
 
@@ -141,6 +151,7 @@ public class DartApiClient {
                     .queryParam("crtfc_key", dartApiKey)
                     .queryParam("bgn_de", startDate)
                     .queryParam("end_de", endDate)
+                    .queryParam("pblntf_ty", pblntfTy)
                     .queryParam("page_no", pageNo)
                     .queryParam("page_count", 100);
 
@@ -170,6 +181,7 @@ public class DartApiClient {
             List<DisclosureItem> items = response.getList();
             if (items == null || items.isEmpty()) break;
 
+            items.forEach(item -> item.setPblntf_ty(pblntfTy));
             allItems.addAll(items);
             log.info("공시 목록 조회 - page: {}/{}, 누적: {}건",
                     pageNo, response.getTotalPage(), allItems.size());

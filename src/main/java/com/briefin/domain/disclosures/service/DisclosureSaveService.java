@@ -35,10 +35,11 @@ public class DisclosureSaveService {
                 .rawText(rawText)
                 .summary(summary)
                 .summaryDetail(summaryDetail)
+                .category(item.getPblntf_ty())
                 .build());
 
         applicationEventPublisher.publishEvent(
-                new DisclosureSavedEvent(company.getId(), saved.getId(), company.getName(), item.getReport_nm())
+                new DisclosureSavedEvent(company.getId(), saved.getId(), company.getName(), item.getReport_nm(), item.getPblntf_ty())
         );
     }
 

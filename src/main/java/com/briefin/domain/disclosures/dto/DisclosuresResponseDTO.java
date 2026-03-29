@@ -53,8 +53,11 @@ public class DisclosuresResponseDTO {
         private Long companyId;
         private String companyName;
         private String ticker;
-        private String summary;
-        private String summaryDetail;
+        private String summaryDetail;       // 레거시 마크다운 형식 (파싱 실패 시 fallback)
+        private List<String> keyPoints;
+        private String detailedContent;
+        private String sentiment;           // "호재" | "악재" | "중립"
+        private String investmentAnalysis;  // 투자 관점 종합 분석 (긍정 요인 + 리스크 통합)
         private String category;
     }
 

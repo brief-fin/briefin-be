@@ -5,7 +5,6 @@ import com.briefin.domain.disclosures.dto.DisclosureItem;
 import com.briefin.domain.disclosures.entity.Disclosures;
 import com.briefin.domain.disclosures.event.DisclosureSavedEvent;
 import com.briefin.domain.disclosures.repository.DisclosuresRepository;
-import com.briefin.domain.pushSubscription.service.WebPushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,7 +26,7 @@ public class DisclosureSaveService {
 
     @Transactional
     public void save(Companies company, DisclosureItem item, String rawText, String summary, String summaryDetail) {
-        disclosuresRepository.save(Disclosures.builder()
+        Disclosures saved = disclosuresRepository.save(Disclosures.builder()
                 .company(company)
                 .dartId(item.getRcept_no())
                 .title(item.getReport_nm())
@@ -36,11 +35,11 @@ public class DisclosureSaveService {
                 .rawText(rawText)
                 .summary(summary)
                 .summaryDetail(summaryDetail)
+                .category(item.getPblntf_ty())
                 .build());
 
-        // 공시 저장 후 구독자에게 푸시 발송
         applicationEventPublisher.publishEvent(
-                new DisclosureSavedEvent(company.getId(), company.getName(), item.getReport_nm())
+                new DisclosureSavedEvent(company.getId(), saved.getId(), company.getName(), item.getReport_nm(), item.getPblntf_ty())
         );
     }
 

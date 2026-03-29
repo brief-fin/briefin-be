@@ -20,7 +20,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -31,6 +33,9 @@ public class DartApiClient {
 
     @Value("${dart.api.key}")
     private String dartApiKey;
+
+    @Value("${dart.api.type-delay-millis:200}")
+    private long typeDelayMillis;
 
     private final RestTemplate restTemplate;
     private final CompaniesRepository companiesRepository;
@@ -68,7 +73,7 @@ public class DartApiClient {
             String corpName = el.getElementsByTagName("corp_name").item(0).getTextContent().trim();
             String stockCode = el.getElementsByTagName("stock_code").item(0).getTextContent().trim();
             if (stockCode.isEmpty()) continue;
-            // skip 대신 upsert로 변경
+
             companiesRepository.findByCorpCode(corpCode).ifPresentOrElse(
                     existing -> {
                         existing.update(corpName, stockCode);
@@ -90,19 +95,53 @@ public class DartApiClient {
     // 전체 공시 목록 조회
     public List<DisclosureItem> fetchAllDisclosures(String startDate, String endDate) {
         List<DisclosureItem> all = new ArrayList<>();
-        for (String type : PBLNTF_TYPES) {
+
+        for (int i = 0; i < PBLNTF_TYPES.length; i++) {
+            String type = PBLNTF_TYPES[i];
             all.addAll(fetchList(null, startDate, endDate, type));
+            sleepBetweenTypeCalls(i);
         }
-        return all;
+
+        return deduplicateByRceptNo(all);
     }
 
     // 기업별 공시 목록 조회
     public List<DisclosureItem> fetchDisclosuresByCorpCode(String corpCode, String startDate, String endDate) {
         List<DisclosureItem> all = new ArrayList<>();
-        for (String type : PBLNTF_TYPES) {
+
+        for (int i = 0; i < PBLNTF_TYPES.length; i++) {
+            String type = PBLNTF_TYPES[i];
             all.addAll(fetchList(corpCode, startDate, endDate, type));
+            sleepBetweenTypeCalls(i);
         }
-        return all;
+
+        return deduplicateByRceptNo(all);
+    }
+
+    private void sleepBetweenTypeCalls(int currentIndex) {
+        if (currentIndex >= PBLNTF_TYPES.length - 1 || typeDelayMillis <= 0) {
+            return;
+        }
+
+        try {
+            Thread.sleep(typeDelayMillis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("DART API 호출 대기 중 인터럽트가 발생했습니다.", e);
+        }
+    }
+
+    private List<DisclosureItem> deduplicateByRceptNo(List<DisclosureItem> items) {
+        Map<String, DisclosureItem> deduplicated = new LinkedHashMap<>();
+
+        for (DisclosureItem item : items) {
+            if (item == null || item.getRcept_no() == null || item.getRcept_no().isBlank()) {
+                continue;
+            }
+            deduplicated.putIfAbsent(item.getRcept_no(), item);
+        }
+
+        return new ArrayList<>(deduplicated.values());
     }
 
     // 공시 원문 텍스트 추출
@@ -122,16 +161,13 @@ public class DartApiClient {
                     .timeout(10_000)
                     .get();
 
-            // 네비게이션/UI 요소 제거
             bodyDoc.select("nav, header, footer, script, style, .navigation, #toolbar").remove();
 
-            // table이 있으면 table 텍스트 위주로 추출 (공시 본문은 보통 table)
             String tableText = bodyDoc.select("table").text();
             if (!tableText.isBlank()) {
                 return tableText;
             }
 
-            // table 없으면 body 전체
             return bodyDoc.body().text();
 
         } catch (IOException e) {
@@ -167,13 +203,11 @@ public class DartApiClient {
                 throw new RuntimeException("DART API 응답이 없습니다.");
             }
 
-            // no-data는 정상 (조회 결과 없음)
             if ("013".equals(response.getStatus())) {
                 log.info("조회된 공시가 없습니다.");
                 break;
             }
 
-            // 그 외 비-000은 실제 오류 (잘못된 API 키, rate limit 등)
             if (!"000".equals(response.getStatus())) {
                 throw new RuntimeException("DART API 오류 [" + response.getStatus() + "]: " + response.getMessage());
             }
@@ -183,6 +217,7 @@ public class DartApiClient {
 
             items.forEach(item -> item.setPblntf_ty(pblntfTy));
             allItems.addAll(items);
+
             log.info("공시 목록 조회 - page: {}/{}, 누적: {}건",
                     pageNo, response.getTotalPage(), allItems.size());
 

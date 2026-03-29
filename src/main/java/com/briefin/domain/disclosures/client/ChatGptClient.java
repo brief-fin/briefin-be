@@ -27,11 +27,9 @@ public class ChatGptClient {
     private final WebClient openAiWebClient;
 
     private String cleanRawText(String rawText) {
-        log.info("=== RAW TEXT 앞 200자 ===\n[{}]", rawText.substring(0, Math.min(200, rawText.length())));
         String cleaned = rawText
                 .replaceAll("잠시만 기다려주세요\\.\\s*", "")  // 로딩 텍스트 제거
                 .replaceAll("\\b(코|유|넥|기)\\s+(?=\\S)", "");   // 접두어 제거
-        log.info("=== CLEANED TEXT 앞 200자 ===\n[{}]", cleaned.substring(0, Math.min(200, cleaned.length())));
         return cleaned;
     }
 

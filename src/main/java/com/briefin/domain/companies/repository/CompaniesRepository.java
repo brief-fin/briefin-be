@@ -25,11 +25,15 @@ public interface CompaniesRepository extends JpaRepository<Companies, Long> {
     Optional<Companies> findByCorpCode(String corpCode);
 
 
-    Optional<Object> findByTicker(String ticker);
+    Optional<Companies> findByTicker(String ticker);
 
     @Modifying
     @Query("UPDATE Companies c SET c.currentPrice = :currentPrice, c.changeRate = :changeRate WHERE c.ticker = :ticker")
     void updatePrice(@Param("ticker") String ticker,
                      @Param("currentPrice") BigDecimal currentPrice,
                      @Param("changeRate") BigDecimal changeRate);
+
+    @Modifying
+    @Query("UPDATE Companies c SET c.marketCap = :marketCap WHERE c.ticker = :ticker")
+    void updateMarketCap(@Param("ticker") String ticker, @Param("marketCap") BigDecimal marketCap);
 }

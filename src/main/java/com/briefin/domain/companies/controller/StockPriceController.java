@@ -37,63 +37,72 @@ public class StockPriceController {
     @GetMapping(value = "/{ticker}/price", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamPrice(@PathVariable String ticker) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        final SseEmitter finalEmitter = emitter;
 
+        // 1. Emitter 관리 로직 (기존과 동일하되 가독성 개선)
         emitterMap.computeIfAbsent(ticker, k -> new CopyOnWriteArrayList<>()).add(emitter);
         log.info("SSE 연결: {} - 현재 구독자 {}명", ticker, emitterMap.get(ticker).size());
 
-        emitter.onCompletion(() -> {
-            emitterMap.get(ticker).remove(emitter);
-            log.info("SSE 연결 종료: {}", ticker);
-        });
-        emitter.onTimeout(() -> {
-            emitterMap.get(ticker).remove(emitter);
-            emitter.complete();
-            log.info("SSE 타임아웃: {}", ticker);
-        });
-        emitter.onError(e -> {
-            emitterMap.get(ticker).remove(emitter);
-            emitter.complete();
-            log.error("SSE 에러: {}", e.getMessage());
-        });
+        Runnable cleanup = () -> {
+            List<SseEmitter> emitters = emitterMap.get(ticker);
+            if (emitters != null) {
+                emitters.remove(emitter);
+            }
+        };
 
+        emitter.onCompletion(cleanup);
+        emitter.onTimeout(() -> { cleanup.run(); emitter.complete(); });
+        emitter.onError(e -> { cleanup.run(); emitter.complete(); });
+
+        // 2. 웹소켓 구독 요청
         try {
             lsWebSocketClient.subscribe(ticker);
         } catch (Exception e) {
-            log.error("구독 실패: {}", ticker);
+            log.error("웹소켓 구독 실패: {}", ticker);
         }
 
+        // 3. 초기 데이터(Initial Payload) 전송 로직 개선
         try {
-            StockPrice initialPrice = lsClient.getCurrentPrice(ticker);
+            // [수정 포인트] DB에서 해당 기업의 기본 정보를 먼저 가져옴 (시가총액 유실 방지용)
+            Companies company = companiesRepository.findByTicker(ticker).orElse(null);
+            long dbMarketCap = (company != null && company.getMarketCap() != null) ? company.getMarketCap().longValue() : 0;
 
-            if (initialPrice == null || initialPrice.getCurrentPrice() == 0) {
-                // 장 전/마감 후 → 전일 종가 조회
-                StockPrice prevClose = lsClient.getPreviousClosePrice(ticker);
-                if (prevClose != null && prevClose.getCurrentPrice() > 0) {
-                    finalEmitter.send(SseEmitter.event().data(prevClose));
-                    log.info("전일종가 전송: {} → {}원", ticker, prevClose.getCurrentPrice());
-                } else {
-                    // 전일 종가도 없으면 DB에서 가져오기
-                    companiesRepository.findByTicker(ticker).ifPresent((Companies company) -> {
-                        try {
-                            double price = company.getCurrentPrice() != null ? company.getCurrentPrice().doubleValue() : 0.0;
-                            double rate = company.getChangeRate() != null ? company.getChangeRate().doubleValue() : 0.0;
-                            long marketCap = company.getMarketCap() != null ? company.getMarketCap().longValue() : 0;
-                            if (price > 0) {
-                                finalEmitter.send(SseEmitter.event().data(new StockPrice(price, rate, marketCap)));
-                                log.info("DB 현재가 전송: {} → {}원", ticker, price);
-                            }
-                        } catch (Exception ex) {
-                            log.error("DB 현재가 전송 실패: {}", ticker);
-                        }
-                    });
-                }
+            StockPrice currentPrice = lsClient.getCurrentPrice(ticker);
+
+            if (currentPrice != null && currentPrice.getCurrentPrice() > 0) {
+                // [수정] set 대신 새로운 객체를 생성하여 전달
+                StockPrice finalPrice = new StockPrice(
+                        currentPrice.getCurrentPrice(),
+                        currentPrice.getChangeRate(),
+                        (currentPrice.getMarketCap() > 0) ? currentPrice.getMarketCap() : dbMarketCap
+                );
+
+                emitter.send(SseEmitter.event().data(finalPrice));
+                log.info("현재가 전송: {} -> {}원", ticker, finalPrice.getCurrentPrice());
             } else {
-                emitter.send(SseEmitter.event().data(initialPrice));
-                log.info("현재가 전송: {} → {}원", ticker, initialPrice.getCurrentPrice());
+                // 장 전/후 또는 API 실패: 전일 종가 조회
+                StockPrice prevClose = lsClient.getPreviousClosePrice(ticker);
+
+                if (prevClose != null && prevClose.getCurrentPrice() > 0) {
+                    // [CodeRabbit 지적 반영] 전일 종가에 DB 시가총액 병합
+                    StockPrice mergedPrice = new StockPrice(
+                            prevClose.getCurrentPrice(),
+                            prevClose.getChangeRate(),
+                            dbMarketCap
+                    );
+                    emitter.send(SseEmitter.event().data(mergedPrice));
+                    log.info("전일종가 전송(DB 시총 병합): {} -> {}원", ticker, prevClose.getCurrentPrice());
+                } else if (company != null) {
+                    // 전일 종가도 없으면 DB 데이터 최종 Fallback
+                    double price = company.getCurrentPrice() != null ? company.getCurrentPrice().doubleValue() : 0.0;
+                    double rate = company.getChangeRate() != null ? company.getChangeRate().doubleValue() : 0.0;
+                    if (price > 0) {
+                        emitter.send(SseEmitter.event().data(new StockPrice(price, rate, dbMarketCap)));
+                        log.info("DB 데이터 전송: {} -> {}원", ticker, price);
+                    }
+                }
             }
         } catch (Exception e) {
-            log.error("최초 조회 실패: {}", ticker);
+            log.error("최초 데이터 전송 에러: {} - {}", ticker, e.getMessage());
         }
 
         return emitter;

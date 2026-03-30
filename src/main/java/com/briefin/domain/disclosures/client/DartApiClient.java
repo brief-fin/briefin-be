@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.parser.Parser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -166,7 +167,10 @@ public class DartApiClient {
                     String name = entry.getName().toLowerCase();
                     log.debug("원문 ZIP 파일: {} ({})", name, rceptNo);
                     if (name.endsWith(".html") || name.endsWith(".htm") || name.endsWith(".xml")) {
-                        Document doc = Jsoup.parse(new String(zis.readAllBytes(), "UTF-8"));
+                        byte[] entryBytes = zis.readAllBytes();
+                        Document doc = name.endsWith(".xml")
+                                ? Jsoup.parse(new ByteArrayInputStream(entryBytes), null, rceptNo, Parser.xmlParser())
+                                : Jsoup.parse(new ByteArrayInputStream(entryBytes), null, rceptNo);
                         doc.select("script, style").remove();
                         String body = doc.body().text().strip();
                         if (!body.isBlank()) {

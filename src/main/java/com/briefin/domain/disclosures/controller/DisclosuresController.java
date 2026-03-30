@@ -45,6 +45,7 @@ public class DisclosuresController {
     }
 
     @Operation(summary = "기업별 최근 공시 조회", description = "companyId에 해당하는 최근 공시 목록 반환")
+    @GetMapping("/recent")
     public ResponseEntity<ApiResponse<List<DisclosuresResponseDTO.DisclosureRecentResponse>>> getRecentDisclosures(
             @RequestParam Long companyId
     ) {

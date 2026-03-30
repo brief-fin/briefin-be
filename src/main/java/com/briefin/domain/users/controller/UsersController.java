@@ -1,5 +1,6 @@
 package com.briefin.domain.users.controller;
 
+import com.briefin.domain.users.dto.RecentNewsResponseDto;
 import com.briefin.domain.users.dto.ScrapNewsResponseDto;
 import com.briefin.domain.users.dto.UserResponseDto;
 import com.briefin.domain.users.dto.WatchlistResponseDto;
@@ -50,6 +51,15 @@ public class UsersController {
         return ResponseEntity.ok(ApiResponse.success(watchlistService.getWatchlist(jwtUserInfo.userId())));
     }
 
+
+    @GetMapping("/recent")
+    public ResponseEntity<ApiResponse<RecentNewsResponseDto>> getRecentNews(
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(usersService.getRecentNews(jwtUserInfo.userId(), page, size)));
+    }
 
     @PostMapping("/{id}/watch")
     @Operation(summary = "관심 기업 등록", description = "사용자가 특정 기업을 관심 등록합니다.")

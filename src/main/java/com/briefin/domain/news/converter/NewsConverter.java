@@ -31,7 +31,8 @@ public class NewsConverter {
     }
 
     public static NewsDetailResponseDTO toDetailDTO(News news, NewsSummary summary,
-                                                    List<NewsCompany> companies, List<String> relatedNewsIds) {
+                                                    List<NewsCompany> companies, List<String> relatedNewsIds,
+                                                    boolean isScraped) {
         return new NewsDetailResponseDTO(
                 news.getId().toString(),
                 resolveTitle(news, summary),
@@ -40,6 +41,8 @@ public class NewsConverter {
                 summary != null ? summary.getCategory() : null,
                 news.getSource(),
                 news.getPublishedAt() != null ? news.getPublishedAt().format(DATE_FORMATTER) : null,
+                news.getOriginalUrl(),
+                isScraped,
                 toCompanyNames(companies),
                 relatedNewsIds
         );

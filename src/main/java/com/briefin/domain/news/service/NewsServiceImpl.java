@@ -4,6 +4,7 @@ import com.briefin.domain.news.converter.NewsConverter;
 import com.briefin.domain.news.dto.*;
 import com.briefin.domain.news.entity.*;
 import com.briefin.domain.news.repository.*;
+import com.briefin.domain.users.repository.ScrapsRepository;
 import com.briefin.global.apipayload.code.status.ErrorCode;
 import com.briefin.global.apipayload.exception.BriefinException;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class NewsServiceImpl implements NewsService {
     private final NewsCompanyRepository newsCompanyRepository;
     private final NewsEmbeddingRepository newsEmbeddingRepository;
     private final NewsViewRepository newsViewRepository;
+    private final ScrapsRepository scrapsRepository;
 
     @Override
     public List<NewsListResponseDTO> getNewsList(String category) {
@@ -75,7 +77,9 @@ public class NewsServiceImpl implements NewsService {
                 .map(Object::toString)
                 .toList();
 
-        return NewsConverter.toDetailDTO(news, getSummary(newsId), getCompanies(newsId), relatedNewsIds);
+        boolean isScraped = userId != null && scrapsRepository.existsByUserIdAndNewsId(userId, newsId);
+
+        return NewsConverter.toDetailDTO(news, getSummary(newsId), getCompanies(newsId), relatedNewsIds, isScraped);
     }
 
     @Override

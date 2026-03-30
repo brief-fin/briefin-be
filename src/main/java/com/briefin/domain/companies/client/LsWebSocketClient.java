@@ -109,6 +109,7 @@ public class LsWebSocketClient {
             String priceStr = node.path("body").path("price").asText();
             String diffStr = node.path("body").path("drate").asText();
 
+
            // log.info("파싱 중: ticker={}, price={}, drate={}", ticker, priceStr, diffStr); // ← 추가
 
 
@@ -126,9 +127,9 @@ public class LsWebSocketClient {
                     // 변동 있을 때만 업데이트 & 이벤트 발행
 //                    log.info("가격 변동 감지: {} {} → {}원 ({}%)",
 //                            ticker, previous != null ? previous.getCurrentPrice() : "없음", price, diff);
-                    StockPrice stockPrice = new StockPrice(price, diff);
+                    StockPrice stockPrice = new StockPrice(price, diff, 0L);
                     stockPriceCache.update(ticker, stockPrice);
-                    eventPublisher.publishEvent(new StockPriceUpdatedEvent(ticker, price, diff));
+                    eventPublisher.publishEvent(new StockPriceUpdatedEvent(ticker, price, diff, 0L));
                     log.debug("가격 변동: {} → {}원 ({}%)", ticker, price, diff);
                 }
             }
@@ -138,11 +139,13 @@ public class LsWebSocketClient {
     }
 
     private void reconnect() {
-        try {
-            Thread.sleep(3000);
-            connect();
-        } catch (Exception e) {
-            log.error("재연결 실패", e);
-        }
+        new Thread(() -> {
+            try {
+                Thread.sleep(3000);
+                connect();
+            } catch (Exception e) {
+                log.error("재연결 실패", e);
+            }
+        }).start();
     }
 }

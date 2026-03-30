@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ChatGptClient {
 
-    @Value("${openai.api-key}")
+    @Value("${openai.api.key}")
     private String openAiKey;
 
     private final WebClient openAiWebClient;

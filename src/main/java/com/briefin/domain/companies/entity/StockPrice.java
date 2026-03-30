@@ -8,4 +8,6 @@ import lombok.Getter;
 public class StockPrice {
     private double currentPrice;
     private double changeRate;
+    private long marketCap;
+
 }

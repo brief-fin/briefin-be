@@ -56,23 +56,11 @@ public class Disclosures {
     }
 
     public String getCategory() {
-        if (category == null) return "기타";  // null 체크 추가
-        return switch (category) {
-            case "A" -> "정기공시";
-            case "B" -> "주요사항보고";
-            case "C" -> "발행공시";
-            case "D" -> "지분공시";
-            case "E" -> "기타공시";
-            case "F" -> "외부감사관련";
-            case "G" -> "펀드공시";
-            case "H" -> "자산유동화";
-            case "I" -> "거래소공시";
-            case "J" -> "공정위공시";
-            default -> "기타";
-        };
+        return category;
     }
 
     public void updateSummaryDetail(String summaryDetail) {
         this.summaryDetail = summaryDetail;
     }
+
 }

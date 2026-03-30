@@ -50,4 +50,5 @@ public class DisclosureSaveService {
                 () -> log.warn("summaryDetail 업데이트 대상 공시 미존재: id={}", id)
         );
     }
+
 }

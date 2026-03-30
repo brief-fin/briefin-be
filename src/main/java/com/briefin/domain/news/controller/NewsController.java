@@ -49,6 +49,12 @@ public class NewsController {
         return ApiResponse.success(newsService.getRelatedNews(id));
     }
 
+    @Operation(summary = "뉴스 타임라인 조회", description = "해당 뉴스와 같은 기업의 관련 뉴스를 시간순으로 반환. isCurrent=true가 현재 기사")
+    @GetMapping("/{id}/timeline")
+    public ApiResponse<List<NewsTimelineItemDTO>> getNewsTimeline(@PathVariable Long id) {
+        return ApiResponse.success(newsService.getNewsTimeline(id));
+    }
+
     @Operation(summary = "뉴스 스크랩 등록")
     @PostMapping("/{id}/scrap")
     public ApiResponse<ScrapResponseDto> addScrap(

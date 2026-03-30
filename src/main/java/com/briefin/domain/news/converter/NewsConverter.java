@@ -68,6 +68,19 @@ public class NewsConverter {
         );
     }
 
+    public static NewsTimelineItemDTO toTimelineItemDTO(News news, NewsSummary summary, boolean isCurrent) {
+        return new NewsTimelineItemDTO(
+                news.getId().toString(),
+                resolveTitle(news, summary),
+                summary != null ? summary.getSummaryLine() : null,
+                summary != null ? summary.getCategory() : null,
+                news.getSource(),
+                news.getThumbnailUrl(),
+                news.getPublishedAt() != null ? news.getPublishedAt().format(DATE_FORMATTER) : null,
+                isCurrent
+        );
+    }
+
     private static List<String> toCompanyNames(List<NewsCompany> companies) {
         return companies.stream()
                 .map(nc -> nc.getCompany().getName())

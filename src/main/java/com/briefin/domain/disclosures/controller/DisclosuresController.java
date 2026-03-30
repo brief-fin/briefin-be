@@ -54,16 +54,6 @@ public class DisclosuresController {
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
-    @Operation(summary = "기업별 최근 공시 조회", description = "companyId에 해당하는 최근 공시 목록 반환")
-    @GetMapping("/recent")
-    public ResponseEntity<ApiResponse<List<DisclosuresResponseDTO.DisclosureRecentResponse>>> getRecentDisclosures(
-            @RequestParam Long companyId
-    ) {
-        List<DisclosuresResponseDTO.DisclosureRecentResponse> result =
-                disclosuresService.getRecentDisclosures(companyId);
-        return ResponseEntity.ok(ApiResponse.success(result));
-    }
-
     @Operation(summary = "기업 코드 동기화", description = "DART API에서 기업 코드를 받아 DB에 동기화")
     @PostMapping("/sync")
     public ResponseEntity<ApiResponse<?>> syncCorpCodes() {

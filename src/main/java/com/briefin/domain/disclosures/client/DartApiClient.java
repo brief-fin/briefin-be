@@ -172,7 +172,9 @@ public class DartApiClient {
                                 ? Jsoup.parse(new ByteArrayInputStream(entryBytes), null, rceptNo, Parser.xmlParser())
                                 : Jsoup.parse(new ByteArrayInputStream(entryBytes), null, rceptNo);
                         doc.select("script, style").remove();
-                        String body = doc.body().text().strip();
+                        String body = doc.body() != null
+                                ? doc.body().text().strip()
+                                : doc.text().strip();
                         if (!body.isBlank()) {
                             text.append(body).append("\n");
                         }

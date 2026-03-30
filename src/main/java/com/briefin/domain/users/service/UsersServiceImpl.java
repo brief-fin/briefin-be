@@ -48,7 +48,7 @@ public class UsersServiceImpl implements UsersService{
 
     @Override
     public RecentNewsResponseDto getRecentNews(UUID userId, int page, int size) {
-        Page<NewsView> viewPage = newsViewRepository.findByUserIdOrderByViewedAtDesc(
+        Page<NewsView> viewPage = newsViewRepository.findByUserIdWithNews(
                 userId, PageRequest.of(page - 1, size)
         );
 

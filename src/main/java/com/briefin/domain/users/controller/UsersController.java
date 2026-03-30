@@ -13,16 +13,18 @@ import com.briefin.global.security.jwt.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.briefin.global.security.jwt.JwtUserInfo;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
-
+@Validated
 public class UsersController {
     private final UsersService usersService;
     private final ScrapsService scrapsService;
@@ -38,8 +40,8 @@ public class UsersController {
     @GetMapping("/scraps")
     public ResponseEntity<ApiResponse<ScrapNewsResponseDto>> getScrappedNews(
             @AuthenticationPrincipal JwtUserInfo jwtUserInfo,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "10") @Min(1) int size
     ) {
         return ResponseEntity.ok(ApiResponse.success(scrapsService.getScrappedNews(jwtUserInfo.userId(), page, size)));
     }
@@ -55,8 +57,8 @@ public class UsersController {
     @GetMapping("/recent")
     public ResponseEntity<ApiResponse<RecentNewsResponseDto>> getRecentNews(
             @AuthenticationPrincipal JwtUserInfo jwtUserInfo,
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "10") @Min(1) int size
     ) {
         return ResponseEntity.ok(ApiResponse.success(usersService.getRecentNews(jwtUserInfo.userId(), page, size)));
     }

@@ -16,8 +16,11 @@ public interface NewsViewRepository extends JpaRepository<NewsView, Long> {
 
     boolean existsByUserIdAndNewsId(UUID userId, Long newsId);
 
-    @Query("SELECT v FROM NewsView v WHERE v.userId = :userId ORDER BY v.viewedAt DESC")
-    Page<NewsView> findByUserIdOrderByViewedAtDesc(@Param("userId") UUID userId, Pageable pageable);
+    @Query(
+        value = "SELECT v FROM NewsView v JOIN FETCH v.news WHERE v.userId = :userId ORDER BY v.viewedAt DESC, v.id DESC",
+        countQuery = "SELECT COUNT(v) FROM NewsView v WHERE v.userId = :userId"
+    )
+    Page<NewsView> findByUserIdWithNews(@Param("userId") UUID userId, Pageable pageable);
 
     @Query("SELECT COUNT(v) FROM NewsView v WHERE v.userId = :userId")
     long countByUserId(@Param("userId") UUID userId);

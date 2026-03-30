@@ -16,5 +16,7 @@ public interface NewsService {
 
     List<NewsRelatedResponseDTO> getRelatedNews(Long newsId);
 
+    List<NewsTimelineItemDTO> getNewsTimeline(Long newsId);
+
     HomeNewsResponseDTO getHomeNews();
 }

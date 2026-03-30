@@ -98,6 +98,40 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
+    public List<NewsTimelineItemDTO> getNewsTimeline(Long newsId) {
+        News current = findNewsById(newsId);
+        List<Long> timelineIds = newsEmbeddingRepository.findTimelineNewsIds(newsId, 20);
+
+        Map<Long, News> newsMap = newsRepository.findAllById(timelineIds).stream()
+                .collect(Collectors.toMap(News::getId, n -> n));
+
+        List<Long> allIds = new java.util.ArrayList<>(timelineIds);
+        allIds.add(newsId);
+        Map<Long, NewsSummary> summaryMap = newsSummaryRepository.findByNewsIdIn(allIds).stream()
+                .collect(Collectors.toMap(ns -> ns.getNews().getId(), ns -> ns));
+
+        List<NewsTimelineItemDTO> timeline = timelineIds.stream()
+                .filter(newsMap::containsKey)
+                .map(id -> NewsConverter.toTimelineItemDTO(newsMap.get(id), summaryMap.get(id), false))
+                .collect(Collectors.toList());
+
+        // 현재 기사를 날짜 순서에 맞는 위치에 삽입
+        NewsTimelineItemDTO currentItem = NewsConverter.toTimelineItemDTO(current, summaryMap.get(newsId), true);
+        int insertIndex = 0;
+        for (int i = 0; i < timeline.size(); i++) {
+            String timelineAt = timeline.get(i).publishedAt();
+            String currentAt = currentItem.publishedAt();
+            if (timelineAt != null && currentAt != null && timelineAt.compareTo(currentAt) > 0) {
+                break;
+            }
+            insertIndex = i + 1;
+        }
+        timeline.add(insertIndex, currentItem);
+
+        return timeline;
+    }
+
+    @Override
     public HomeNewsResponseDTO getHomeNews() {
         List<NewsSummary> domesticSummaries = newsSummaryRepository.findTop3ByRegionWithNews("국내", PageRequest.of(0, 3));
         List<NewsSummary> foreignSummaries = newsSummaryRepository.findTop3ByRegionWithNews("해외", PageRequest.of(0, 3));

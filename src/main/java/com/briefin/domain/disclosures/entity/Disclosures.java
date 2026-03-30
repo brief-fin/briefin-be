@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "disclosures")
@@ -46,14 +45,22 @@ public class Disclosures {
     private LocalDateTime createdAt;
 
     @Column(columnDefinition = "TEXT")
-    private String summaryDetail;  // GPT 상세 분석
+    private String summaryDetail;
+
+    @Column(name = "category", length = 50)
+    private String category;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
 
+    public String getCategory() {
+        return category;
+    }
+
     public void updateSummaryDetail(String summaryDetail) {
         this.summaryDetail = summaryDetail;
     }
+
 }

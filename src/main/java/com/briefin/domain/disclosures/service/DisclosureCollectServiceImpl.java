@@ -47,6 +47,12 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
     private void saveDisclosures(List<DisclosureItem> items) {
         for (DisclosureItem item : items) {
 
+            // 첨부정정 공시 스킵 (첨부파일만 존재 — 본문 텍스트 추출 불가)
+            if (item.getReport_nm() != null && item.getReport_nm().startsWith("[첨부정정]")) {
+                log.debug("첨부정정 공시 스킵: {}", item.getReport_nm());
+                continue;
+            }
+
             // 최적화용 선체크 (TOCTOU 완전 방지는 아님 — catch로 보완)
             if (disclosuresRepository.existsByDartId(item.getRcept_no())) {
                 log.debug("이미 존재하는 공시 스킵: {}", item.getRcept_no());

@@ -4,6 +4,7 @@ package com.briefin.domain.companies.controller;
 import com.briefin.domain.companies.dto.CompanyResponseDto;
 import com.briefin.domain.companies.service.CompaniesQueryService;
 import com.briefin.domain.companies.service.CompanyDataInitService;
+import com.briefin.global.apipayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -22,28 +23,22 @@ public class CompaniesController {
     private final CompanyDataInitService companyDataInitService;
 
     @GetMapping("/{id}")
-    public ResponseEntity<CompanyResponseDto> getCompany(@PathVariable Long id) {
-        return ResponseEntity.ok(companiesService.getCompany(id));
+    public ApiResponse<CompanyResponseDto> getCompany(@PathVariable Long id) {
+        return ApiResponse.success(companiesService.getCompany(id));
     }
 
     @GetMapping("/popular")
-    public ResponseEntity<List<CompanyResponseDto>> getPopularCompanies() {
-        return ResponseEntity.ok(companiesService.getPopularCompanies());
-    }
-
-    @PostMapping("/sync")
-    public ResponseEntity<String> syncCompanies() {
-        companyDataInitService.syncCompanies();
-        return ResponseEntity.ok("동기화 완료!");
+    public ApiResponse<List<CompanyResponseDto>> getPopularCompanies() {
+        return ApiResponse.success(companiesService.getPopularCompanies());
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<CompanyResponseDto>> searchCompanies(
+    public ApiResponse<Page<CompanyResponseDto>> searchCompanies(
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(companiesService.getSearchResultCompanies(q, pageable));
+        return ApiResponse.success(companiesService.getSearchResultCompanies(q, pageable));
     }
 }

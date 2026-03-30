@@ -63,7 +63,7 @@ public class FeedsServiceImpl implements FeedsService {
                 news.getSource(),
                 news.getPublishedAt() != null ? news.getPublishedAt().format(DATE_FORMATTER) : null,
                 news.getThumbnailUrl(),
-                companies.stream().map(nc -> nc.getCompany().getId().toString()).toList()
+                companies.stream().map(nc -> nc.getCompany().getName()).toList()
         );
     }
 }

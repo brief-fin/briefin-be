@@ -11,6 +11,8 @@ NewsDetailResponseDTO(
         String category,
         String press,
         String publishedAt,
+        String originalUrl,
+        boolean isScraped,
         List<String> relatedCompanies,
         List<String> relatedNews
 ) {}

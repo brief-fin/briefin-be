@@ -61,7 +61,7 @@ public class ReelsServiceImpl implements ReelsService {
                 summary != null ? summary.getCategory() : null,
                 news.getSource(),
                 news.getPublishedAt() != null ? news.getPublishedAt().format(DATE_FORMATTER) : null,
-                companies.stream().map(nc -> nc.getCompany().getId().toString()).toList()
+                companies.stream().map(nc -> nc.getCompany().getName()).toList()
         );
     }
 }

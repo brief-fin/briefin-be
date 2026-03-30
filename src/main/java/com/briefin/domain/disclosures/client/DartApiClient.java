@@ -18,7 +18,6 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -90,15 +89,20 @@ public class DartApiClient {
         }
     }
 
-    private static final String[] PBLNTF_TYPES = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J"};
+    // 주가에 영향을 미치는 공시 세부유형
+    // B001: 주요사항보고서 (유상증자, 무상증자, 감자, 합병, 분할, 배당 등)
+    // A001/A002/A003: 사업/반기/분기보고서 (실적)
+    // C001: 증권신고서(지분증권) - 신주발행
+    // D001: 주식등의대량보유상황보고서 - 5% 룰
+    private static final String[] STOCK_RELEVANT_DETAIL_TYPES = {"B001", "A001", "A002", "A003", "C001", "D001"};
 
     // 전체 공시 목록 조회
     public List<DisclosureItem> fetchAllDisclosures(String startDate, String endDate) {
         List<DisclosureItem> all = new ArrayList<>();
 
-        for (int i = 0; i < PBLNTF_TYPES.length; i++) {
-            String type = PBLNTF_TYPES[i];
-            all.addAll(fetchList(null, startDate, endDate, type));
+        for (int i = 0; i < STOCK_RELEVANT_DETAIL_TYPES.length; i++) {
+            String detailType = STOCK_RELEVANT_DETAIL_TYPES[i];
+            all.addAll(fetchList(null, startDate, endDate, detailType));
             sleepBetweenTypeCalls(i);
         }
 
@@ -109,9 +113,9 @@ public class DartApiClient {
     public List<DisclosureItem> fetchDisclosuresByCorpCode(String corpCode, String startDate, String endDate) {
         List<DisclosureItem> all = new ArrayList<>();
 
-        for (int i = 0; i < PBLNTF_TYPES.length; i++) {
-            String type = PBLNTF_TYPES[i];
-            all.addAll(fetchList(corpCode, startDate, endDate, type));
+        for (int i = 0; i < STOCK_RELEVANT_DETAIL_TYPES.length; i++) {
+            String detailType = STOCK_RELEVANT_DETAIL_TYPES[i];
+            all.addAll(fetchList(corpCode, startDate, endDate, detailType));
             sleepBetweenTypeCalls(i);
         }
 
@@ -119,7 +123,7 @@ public class DartApiClient {
     }
 
     private void sleepBetweenTypeCalls(int currentIndex) {
-        if (currentIndex >= PBLNTF_TYPES.length - 1 || typeDelayMillis <= 0) {
+        if (currentIndex >= STOCK_RELEVANT_DETAIL_TYPES.length - 1 || typeDelayMillis <= 0) {
             return;
         }
 
@@ -144,40 +148,48 @@ public class DartApiClient {
         return new ArrayList<>(deduplicated.values());
     }
 
-    // 공시 원문 텍스트 추출
+    // 공시 원문 텍스트 추출 (DART 공식 원문 다운로드 API 사용)
     public String fetchDisclosureText(String rceptNo) {
         try {
-            String viewerUrl = "https://dart.fss.or.kr/dsaf001/main.do?rcpNo=" + rceptNo;
-            Document doc = Jsoup.connect(viewerUrl)
-                    .userAgent("Mozilla/5.0")
-                    .timeout(10_000)
-                    .get();
+            String url = "https://opendart.fss.or.kr/api/document.xml?crtfc_key=" + dartApiKey + "&rcept_no=" + rceptNo;
+            byte[] zipBytes = restTemplate.getForObject(url, byte[].class);
 
-            String iframeSrc = doc.select("iframe#ifrm").attr("src");
-            if (iframeSrc.isEmpty()) return doc.body().text();
-
-            Document bodyDoc = Jsoup.connect("https://dart.fss.or.kr" + iframeSrc)
-                    .userAgent("Mozilla/5.0")
-                    .timeout(10_000)
-                    .get();
-
-            bodyDoc.select("nav, header, footer, script, style, .navigation, #toolbar").remove();
-
-            String tableText = bodyDoc.select("table").text();
-            if (!tableText.isBlank()) {
-                return tableText;
+            if (zipBytes == null || zipBytes.length == 0) {
+                log.warn("원문 ZIP 응답 없음: {}", rceptNo);
+                return "";
             }
 
-            return bodyDoc.body().text();
+            StringBuilder text = new StringBuilder();
+            try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
+                ZipEntry entry;
+                while ((entry = zis.getNextEntry()) != null) {
+                    String name = entry.getName().toLowerCase();
+                    log.debug("원문 ZIP 파일: {} ({})", name, rceptNo);
+                    if (name.endsWith(".html") || name.endsWith(".htm") || name.endsWith(".xml")) {
+                        Document doc = Jsoup.parse(new String(zis.readAllBytes(), "UTF-8"));
+                        doc.select("script, style").remove();
+                        String body = doc.body().text().strip();
+                        if (!body.isBlank()) {
+                            text.append(body).append("\n");
+                        }
+                    }
+                }
+            }
 
-        } catch (IOException e) {
-            log.error("원문 파싱 실패: {}", rceptNo);
+            String result = text.toString().strip();
+            if (result.isBlank()) {
+                log.warn("원문 텍스트 추출 결과 없음: {}", rceptNo);
+            }
+            return result;
+
+        } catch (Exception e) {
+            log.error("원문 파싱 실패: {}", rceptNo, e);
             return "";
         }
     }
 
     // 공통 목록 조회 (페이지네이션)
-    private List<DisclosureItem> fetchList(String corpCode, String startDate, String endDate, String pblntfTy) {
+    private List<DisclosureItem> fetchList(String corpCode, String startDate, String endDate, String pblntfDetailTy) {
         List<DisclosureItem> allItems = new ArrayList<>();
         int pageNo = 1;
 
@@ -187,7 +199,7 @@ public class DartApiClient {
                     .queryParam("crtfc_key", dartApiKey)
                     .queryParam("bgn_de", startDate)
                     .queryParam("end_de", endDate)
-                    .queryParam("pblntf_ty", pblntfTy)
+                    .queryParam("pblntf_detail_ty", pblntfDetailTy)
                     .queryParam("page_no", pageNo)
                     .queryParam("page_count", 100);
 
@@ -215,7 +227,7 @@ public class DartApiClient {
             List<DisclosureItem> items = response.getList();
             if (items == null || items.isEmpty()) break;
 
-            items.forEach(item -> item.setPblntf_ty(pblntfTy));
+            items.forEach(item -> item.setPblntf_ty(pblntfDetailTy));
             allItems.addAll(items);
 
             log.info("공시 목록 조회 - page: {}/{}, 누적: {}건",

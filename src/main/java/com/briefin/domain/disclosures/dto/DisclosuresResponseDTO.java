@@ -19,6 +19,7 @@ public class DisclosuresResponseDTO {
         private String companyName;
         private String ticker;
         private String summary;
+        private List<String> keyPoints;
         private String category;
     }
 

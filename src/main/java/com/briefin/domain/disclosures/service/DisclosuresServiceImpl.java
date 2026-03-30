@@ -47,6 +47,7 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                 .companyName(d.getCompany().getName())
                 .ticker(d.getCompany().getTicker())
                 .summary(d.getSummary())
+                .keyPoints(parseKeyPoints(d.getSummaryDetail()))
                 .category(d.getCategory())
                 .build());
     }
@@ -71,6 +72,21 @@ public class DisclosuresServiceImpl implements DisclosuresService {
         parseSummaryDetail(disclosure.getSummaryDetail(), builder);
 
         return builder.build();
+    }
+
+    private List<String> parseKeyPoints(String rawDetail) {
+        if (rawDetail == null || rawDetail.isBlank()) return Collections.emptyList();
+        try {
+            String jsonStr = rawDetail.strip();
+            if (jsonStr.startsWith("```")) {
+                jsonStr = jsonStr.replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").strip();
+            }
+            JsonNode node = objectMapper.readTree(jsonStr);
+            return toStringList(node.get("keyPoints"));
+        } catch (Exception e) {
+            log.warn("keyPoints 파싱 실패: {}", e.getMessage());
+            return Collections.emptyList();
+        }
     }
 
     private void parseSummaryDetail(

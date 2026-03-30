@@ -78,8 +78,6 @@ public class DartApiClient {
                             .name(corpName)
                             .ticker(stockCode)
                             .corpCode(corpCode)
-                            .corpName(corpName)
-                            .stockCode(stockCode)
                             .build())
             );
         }

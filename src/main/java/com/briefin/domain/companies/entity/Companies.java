@@ -44,7 +44,6 @@ public class Companies extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String corpCode;
 
-
     public void update(String corpName, String stockCode) {
         this.name = corpName;
         this.ticker = stockCode;

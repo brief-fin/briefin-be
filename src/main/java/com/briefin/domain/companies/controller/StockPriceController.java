@@ -2,7 +2,7 @@ package com.briefin.domain.companies.controller;
 
 import com.briefin.domain.companies.client.LsClient;
 import com.briefin.domain.companies.client.LsWebSocketClient;
-import com.briefin.domain.companies.dto.CompanyResponseDto;
+import com.briefin.domain.companies.dto.PopularCompanyDto;
 import com.briefin.domain.companies.dto.PopularCompanyResponseDto;
 import com.briefin.domain.companies.entity.Companies;
 import com.briefin.domain.companies.entity.StockPrice;
@@ -78,8 +78,9 @@ public class StockPriceController {
                         try {
                             double price = company.getCurrentPrice() != null ? company.getCurrentPrice().doubleValue() : 0.0;
                             double rate = company.getChangeRate() != null ? company.getChangeRate().doubleValue() : 0.0;
+                            long marketCap = company.getMarketCap() != null ? company.getMarketCap().longValue() : 0;
                             if (price > 0) {
-                                finalEmitter.send(SseEmitter.event().data(new StockPrice(price, rate)));
+                                finalEmitter.send(SseEmitter.event().data(new StockPrice(price, rate, marketCap)));
                                 log.info("DB 현재가 전송: {} → {}원", ticker, price);
                             }
                         } catch (Exception ex) {
@@ -110,7 +111,7 @@ public class StockPriceController {
             try {
                 emitter.send(SseEmitter.event()
                         .name("realtime-price")
-                        .data(new StockPrice(event.price(), event.diff())));
+                        .data(new StockPrice(event.price(), event.diff(),event.marketPrice())));
             } catch (Exception e) {
                 log.error("SSE 전송 실패: {}", e.getMessage());
                 emitter.complete();
@@ -119,29 +120,35 @@ public class StockPriceController {
         }
     }
 
-    @GetMapping("/ls/popular")
-    public ApiResponse<List<CompanyResponseDto>> getPopularCompanies() {
-        List<String> tickers = lsClient.getPopularTickers();
-        List<Companies> companies = companiesRepository.findByTickerIn(tickers);
-        List<CompanyResponseDto> result = companies.stream()
-                .map(company -> {
-                    StockPrice cached = stockPriceCache.get(company.getTicker());
-                    return CompanyResponseDto.of(company, cached);
-                })
-                .collect(Collectors.toList());
-        return ApiResponse.success(result);
+    @GetMapping("/popular/diff")
+    public ApiResponse<List<PopularCompanyResponseDto>> getTopDiffCompanies() {
+        return ApiResponse.success(buildPopularResponse(lsClient.getTopDiffTickers()));
     }
 
-    @GetMapping("/ls/popular")
-    public ApiResponse<List<PopularCompanyResponseDto>> getPopularCompanies() {
-        List<Companies> popularList = lsClient.getPopularTickers();
+    @GetMapping("/popular/market-cap")
+    public ApiResponse<List<PopularCompanyResponseDto>> getTopMarketCapCompanies() {
+        return ApiResponse.success(buildPopularResponse(lsClient.getTopMarketCapTickers()));
+    }
+
+    @GetMapping("/popular/volume")
+    public ApiResponse<List<PopularCompanyResponseDto>> getTopVolumeCompanies() {
+        return ApiResponse.success(buildPopularResponse(lsClient.getTopVolumeTickers()));
+    }
+
+    @GetMapping("/popular/value")
+    public ApiResponse<List<PopularCompanyResponseDto>> getTopValueCompanies() {
+        return ApiResponse.success(buildPopularResponse(lsClient.getTopValueTickers()));
+    }
+
+    // 공통 메서드
+    private List<PopularCompanyResponseDto> buildPopularResponse(List<PopularCompanyDto> popularList) {
         List<String> tickers = popularList.stream()
                 .map(PopularCompanyDto::getTicker)
                 .collect(Collectors.toList());
 
         List<Companies> companies = companiesRepository.findByTickerIn(tickers);
 
-        List<PopularCompanyResponseDto> result = companies.stream()
+        return companies.stream()
                 .map(company -> {
                     double diff = popularList.stream()
                             .filter(p -> p.getTicker().equals(company.getTicker()))
@@ -151,9 +158,6 @@ public class StockPriceController {
                     return PopularCompanyResponseDto.of(company, diff);
                 })
                 .collect(Collectors.toList());
-
-        return ApiResponse.success(result);
     }
-
 
 }

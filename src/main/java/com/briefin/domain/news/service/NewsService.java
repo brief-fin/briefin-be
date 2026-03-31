@@ -22,4 +22,6 @@ public interface NewsService {
     HomeNewsResponseDTO getHomeNews();
 
     List<TermExplanationDTO> getTermExplanations(Long newsId);
+
+    NewsPageResponseDTO getNewsByCompany(Long companyId, int page, int size);
 }

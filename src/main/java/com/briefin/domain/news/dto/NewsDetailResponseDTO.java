@@ -14,6 +14,8 @@ NewsDetailResponseDTO(
         String originalUrl,
         String thumbnailUrl,
         boolean isScraped,
-        List<String> relatedCompanies,
+        List<CompanyInfo> relatedCompanies,
         List<String> relatedNews
-) {}
+) {
+    public record CompanyInfo(String companyId, String name, String ticker) {}
+}

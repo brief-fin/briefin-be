@@ -44,7 +44,7 @@ public class NewsConverter {
                 news.getOriginalUrl(),
                 news.getThumbnailUrl(),
                 isScraped,
-                toCompanyNames(companies),
+                toCompanyInfos(companies),
                 relatedNewsIds
         );
     }
@@ -88,6 +88,16 @@ public class NewsConverter {
     private static List<String> toCompanyNames(List<NewsCompany> companies) {
         return companies.stream()
                 .map(nc -> nc.getCompany().getName())
+                .toList();
+    }
+
+    private static List<NewsDetailResponseDTO.CompanyInfo> toCompanyInfos(List<NewsCompany> companies) {
+        return companies.stream()
+                .map(nc -> new NewsDetailResponseDTO.CompanyInfo(
+                        nc.getCompany().getId().toString(),
+                        nc.getCompany().getName(),
+                        nc.getCompany().getTicker()
+                ))
                 .toList();
     }
 }

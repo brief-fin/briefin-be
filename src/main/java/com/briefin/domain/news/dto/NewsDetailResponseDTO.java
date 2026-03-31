@@ -12,6 +12,7 @@ NewsDetailResponseDTO(
         String press,
         String publishedAt,
         String originalUrl,
+        String thumbnailUrl,
         boolean isScraped,
         List<String> relatedCompanies,
         List<String> relatedNews

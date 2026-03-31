@@ -42,6 +42,7 @@ public class NewsConverter {
                 news.getSource(),
                 news.getPublishedAt() != null ? news.getPublishedAt().format(DATE_FORMATTER) : null,
                 news.getOriginalUrl(),
+                news.getThumbnailUrl(),
                 isScraped,
                 toCompanyNames(companies),
                 relatedNewsIds

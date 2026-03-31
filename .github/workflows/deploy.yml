@@ -84,7 +84,6 @@ jobs:
               -e OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
               -e DART_API_KEY="${{ secrets.DART_API_KEY }}" \
               -e VAPID_PRIVATE_KEY="${{ secrets.VAPID_PRIVATE_KEY }}" \
-              -e SPRING_PROFILES_ACTIVE=prod \
               ${{ env.IMAGE_NAME }}:latest
 
             docker image prune -f

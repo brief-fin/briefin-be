@@ -20,7 +20,8 @@ public interface CompaniesRepository extends JpaRepository<Companies, Long> {
 
     List<Companies> findByTickerIn(List<String> tickers);
 
-    Page<Companies> findByNameContaining(String name, Pageable pageable);
+    @Query("SELECT c FROM Companies c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(c.ticker) LIKE LOWER(CONCAT('%', :q, '%'))")
+    Page<Companies> searchByNameOrTicker(@Param("q") String q, Pageable pageable);
 
     Optional<Companies> findByCorpCode(String corpCode);
 

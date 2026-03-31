@@ -82,7 +82,7 @@ public class CompaniesQueryServiceImpl implements CompaniesQueryService {
     @Override
     public Page<CompanyResponseDto> getSearchResultCompanies(String name,Pageable pageable) {
 
-        Page<Companies> companies = companiesRepository.findByNameContaining(name, pageable);
+        Page<Companies> companies = companiesRepository.searchByNameOrTicker(name, pageable);
 
 
 

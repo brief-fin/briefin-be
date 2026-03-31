@@ -6,6 +6,7 @@ import com.briefin.domain.companies.repository.CompaniesRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ public class CompanyDataInitService {
     private final KisClient kisClient;
 
     // Swagger에서 호출하는 동기화 메서드
+    @Transactional
     public void syncCompanies() {
         List<Companies> companies = companiesRepository.findAll();
 
@@ -37,10 +39,9 @@ public class CompanyDataInitService {
                 String sector = (String) info.get("idx_bztp_mcls_cd_name");
                 log.info("섹터 조회: {} ({}) → '{}'", company.getName(), ticker, sector);
 
-                company.setSector(sector);
-                company.setLogoUrl("https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-" + ticker + ".png");
+                String logoUrl = "https://thumb.tossinvest.com/image/resized/96x0/https%3A%2F%2Fstatic.toss.im%2Fpng-icons%2Fsecurities%2Ficn-sec-fill-" + ticker + ".png";
 
-                companiesRepository.save(company);
+                companiesRepository.updateSectorAndLogo(ticker, sector, logoUrl); // ← 변경
                 log.info("동기화 완료: {} ({})", company.getName(), ticker);
                 Thread.sleep(1500);
 

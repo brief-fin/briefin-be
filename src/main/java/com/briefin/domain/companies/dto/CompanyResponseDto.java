@@ -20,6 +20,7 @@ public class CompanyResponseDto {
     private Double changeRate;              // 등락률 (%)
     private Integer marketCap;
     private boolean isOverseas;
+    private boolean watchlisted;
     private List<RelatedCompanyDto> relatedCompanies;  // 관련 기업 목록
 
 

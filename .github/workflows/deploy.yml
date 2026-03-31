@@ -64,6 +64,15 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Redis 컨테이너 실행 (없을 때만)
+            if ! docker ps -q --filter name=redis | grep -q .; then
+              docker run -d \
+                --name redis \
+                --restart unless-stopped \
+                -p 6379:6379 \
+                redis:alpine
+            fi
+
             docker pull ${{ env.IMAGE_NAME }}:latest
 
             docker stop briefin-backend || true
@@ -72,7 +81,7 @@ jobs:
             docker run -d \
               --name briefin-backend \
               --restart unless-stopped \
-              -p 8080:8080 \
+              --network host \
               -e SPRING_DATASOURCE_URL="${{ secrets.DB_URL }}" \
               -e SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}" \
               -e SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \

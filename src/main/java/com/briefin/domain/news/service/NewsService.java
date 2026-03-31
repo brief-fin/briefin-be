@@ -6,9 +6,10 @@ import java.util.List;
 import java.util.UUID;
 
 
+
 public interface NewsService {
 
-    List<NewsListResponseDTO> getNewsList(String category);
+    NewsPageResponseDTO getNewsList(String category, int page, int size);
 
     NewsDetailResponseDTO getNewsDetail(Long newsId, UUID userId);
 

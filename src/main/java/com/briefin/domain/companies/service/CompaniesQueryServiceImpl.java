@@ -36,7 +36,7 @@ public class CompaniesQueryServiceImpl implements CompaniesQueryService {
         if (userId != null) {
             Users user = usersRepository.findById(userId).orElse(null);
             if (user != null) {
-                watchlisted = watchlistRepository.existsByUserIdAndCompanyId(user.getId(), company.getId());
+                watchlisted = watchlistRepository.existsByUser_IdAndCompany_Id(user.getId(), company.getId());
             }
         }
 
@@ -82,7 +82,7 @@ public class CompaniesQueryServiceImpl implements CompaniesQueryService {
     @Override
     public Page<CompanyResponseDto> getSearchResultCompanies(String name,Pageable pageable) {
 
-        Page<Companies> companies = companiesRepository.findByNameContaining(name, pageable);
+        Page<Companies> companies = companiesRepository.searchByNameOrTicker(name, pageable);
 
 
 

@@ -45,7 +45,7 @@ public class NewsController {
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ApiResponse.success(newsService.searchNews(q, page, size));
+        return ApiResponse.success(newsService.searchNews(q, page, Math.min(size, 50)));
     }
 
     @Operation(summary = "관련 뉴스 목록 조회")

@@ -7,6 +7,8 @@ import com.briefin.domain.users.entity.Users;
 import com.briefin.domain.users.entity.Watchlist;
 import com.briefin.domain.users.repository.UsersRepository;
 import com.briefin.domain.users.repository.WatchlistRepository;
+import com.briefin.global.apipayload.code.status.ErrorCode;
+import com.briefin.global.apipayload.exception.BriefinException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +32,8 @@ public class WatchlistServiceImpl implements WatchlistService {
         List<WatchlistResponseDto.WatchlistItem> items = watchlist.stream()
                 .map(w -> WatchlistResponseDto.WatchlistItem.builder()
                         .companyId(w.getCompany().getId())
-                        .companyName(w.getCompany().getName())
+                        .name(w.getCompany().getName())
+                        .sector(w.getCompany().getSector())
                         .ticker(w.getCompany().getTicker())
                         .logoUrl(w.getCompany().getLogoUrl())
                         .addedAt(w.getCreatedAt())
@@ -42,37 +45,29 @@ public class WatchlistServiceImpl implements WatchlistService {
                 .build();
     }
 
+    @Override
     @Transactional
-    public WatchlistResponseDto.WatchlistAddResponseDto addWatch(Long companyId, UUID userId) {
+    public void addWatch(Long companyId, UUID userId) {
         Companies company = companiesRepository.findById(companyId)
-                .orElseThrow(() -> new RuntimeException("기업을 찾을 수 없습니다."));
+                .orElseThrow(() -> new BriefinException(ErrorCode.COMPANY_NOT_FOUND));
 
         Users user = usersRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
+                .orElseThrow(() -> new BriefinException(ErrorCode.USER_NOT_FOUND));
 
-        boolean alreadyWatched = watchlistRepository.existsByUserIdAndCompanyId(userId, companyId);
-        if (alreadyWatched) {
-            throw new RuntimeException("이미 관심 등록된 기업입니다.");
+        if (watchlistRepository.existsByUser_IdAndCompany_Id(userId, companyId)) {
+            return;
         }
 
-        Watchlist watchlist = Watchlist.builder()
+        watchlistRepository.save(Watchlist.builder()
                 .user(user)
                 .company(company)
-                .build();
-
-        watchlistRepository.save(watchlist);
-
-        return WatchlistResponseDto.WatchlistAddResponseDto.builder()
-                .companyId(companyId)
-                .userId(userId)
-                .build();
+                .build());
     }
 
+    @Override
     @Transactional
     public void removeWatch(Long companyId, UUID userId) {
-        Watchlist watchlist = watchlistRepository.findByUserIdAndCompanyId(userId, companyId)
-                .orElseThrow(() -> new RuntimeException("관심 등록된 기업이 없습니다."));
-
-        watchlistRepository.delete(watchlist);
+        watchlistRepository.findByUser_IdAndCompany_Id(userId, companyId)
+                .ifPresent(watchlistRepository::delete);
     }
 }

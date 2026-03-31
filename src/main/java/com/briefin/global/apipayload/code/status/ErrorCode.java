@@ -24,6 +24,8 @@ public enum ErrorCode implements BaseCode {
     TOKEN_EXPIRED(401, "TOKEN_EXPIRED", "토큰이 만료되었습니다."),
     TOKEN_INVALID(401, "TOKEN_INVALID", "유효하지 않은 토큰입니다."),
     TOKEN_MISSING(401, "TOKEN_MISSING", "토큰이 존재하지 않습니다."),
+    REFRESH_NOT_FOUND(401, "REFRESH_NOT_FOUND", "리프레시 토큰이 만료되었거나 로그아웃 처리되었습니다."),
+    REFRESH_MISMATCH(401, "REFRESH_MISMATCH", "리프레시 토큰이 일치하지 않습니다."),
     AUTH_FORBIDDEN(403, "AUTH403", "접근 권한이 없습니다."),
     ACCESS_DENIED(403, "ACCESS_DENIED", "해당 리소스에 접근할 수 없습니다."),
     INVALID_TOKEN(401, "INVALID_TOKEN", "유효하지 않은 토큰입니다."),

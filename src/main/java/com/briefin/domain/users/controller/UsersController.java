@@ -9,12 +9,12 @@ import com.briefin.domain.users.service.UsersService;
 import com.briefin.domain.users.service.WatchlistService;
 import com.briefin.global.apipayload.ApiResponse;
 import com.briefin.global.security.util.CookieUtil;
-import com.briefin.global.security.jwt.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.briefin.global.security.jwt.JwtUserInfo;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequiredArgsConstructor
 @RequestMapping("/api/users")
 @Validated
+@Slf4j
 public class UsersController {
     private final UsersService usersService;
     private final ScrapsService scrapsService;
@@ -63,18 +64,25 @@ public class UsersController {
         return ResponseEntity.ok(ApiResponse.success(usersService.getRecentNews(jwtUserInfo.userId(), page, size)));
     }
 
-    @PostMapping("/{id}/watch")
-    @Operation(summary = "관심 기업 등록", description = "사용자가 특정 기업을 관심 등록합니다.")
+    @PostMapping("/{companyId}/watch")
+    @Operation(summary = "관심 기업 등록", description = "사용자가 특정 기업을 관심 등록합니다. 이미 등록된 경우에도 성공(멱등).")
     @SecurityRequirement(name = "JWT TOKEN")
-    public ResponseEntity<WatchlistResponseDto.WatchlistAddResponseDto> addWatch(@PathVariable Long id) {
-        return ResponseEntity.ok(watchlistService.addWatch(id, SecurityUtils.getCurrentUserId()));
+    public ResponseEntity<ApiResponse<Void>> addWatch(
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo,
+            @PathVariable Long companyId
+    ) {
+        watchlistService.addWatch(companyId, jwtUserInfo.userId());
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @DeleteMapping("/{id}/watch")
-    @Operation(summary = "관심 기업 취소", description = "사용자가 특정 기업을 관심 목록에서 취소합니다.")
-    public ResponseEntity<Void> removeWatch(@PathVariable Long id) {
-        watchlistService.removeWatch(id, SecurityUtils.getCurrentUserId());
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{companyId}/watch")
+    @Operation(summary = "관심 기업 취소", description = "관심 목록에 없어도 성공(멱등).")
+    public ResponseEntity<ApiResponse<Void>> removeWatch(
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo,
+            @PathVariable Long companyId
+    ) {
+        watchlistService.removeWatch(companyId, jwtUserInfo.userId());
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @DeleteMapping("/me")
@@ -82,9 +90,11 @@ public class UsersController {
             @AuthenticationPrincipal JwtUserInfo jwtUserInfo,
             HttpServletResponse response
     ) {
+        log.info("users.withdraw: userId={}", jwtUserInfo.userId());
         usersService.deleteUser(jwtUserInfo.userId());
 
         CookieUtil.deleteRefreshTokenCookie(response);
+        log.info("users.withdraw: cookie expired (refresh token omitted)");
 
         return ResponseEntity.ok(ApiResponse.<Void>success(null));
     }

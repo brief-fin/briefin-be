@@ -17,7 +17,15 @@ public class CompanyUpdateServiceImpl implements CompanyUpdateService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updatePrice(String ticker, Long marketCap) {
-        // 기존 쿼리 메서드 호출
         companiesRepository.updateMarketCap(ticker, BigDecimal.valueOf(marketCap));
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updatePriceAndChangeRate(String ticker, double currentPrice, double changeRate, long marketCap) {
+        companiesRepository.updatePrice(ticker, BigDecimal.valueOf(currentPrice), BigDecimal.valueOf(changeRate));
+        if (marketCap > 0) {
+            companiesRepository.updateMarketCap(ticker, BigDecimal.valueOf(marketCap));
+        }
     }
 }

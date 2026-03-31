@@ -69,6 +69,29 @@ public class LsWebSocketClient {
         }
     }
 
+    public void unsubscribe(String ticker) {
+        if (session == null || !session.isOpen()) return;
+        try {
+            String token = lsTokenManager.getToken();
+            String msg = String.format("""
+                    {
+                        "header": {
+                            "token": "%s",
+                            "tr_type": "4"
+                        },
+                        "body": {
+                            "tr_cd": "S3_",
+                            "tr_key": "%s"
+                        }
+                    }
+                    """, token, ticker);
+            session.sendMessage(new TextMessage(msg));
+            log.info("구독 해제: {}", ticker);
+        } catch (Exception e) {
+            log.error("구독 해제 실패: {}", ticker);
+        }
+    }
+
     public void subscribe(String ticker) throws Exception {
         int retry = 0;
         String token = lsTokenManager.getToken();

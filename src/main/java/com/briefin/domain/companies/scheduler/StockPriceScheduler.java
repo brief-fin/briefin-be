@@ -47,7 +47,7 @@ public class StockPriceScheduler {
         log.info("장 마감 - 종가 DB 저장 완료");
     }
 
-    @Scheduled(cron = "0 37 11 * * MON-FRI")
+    @Scheduled(cron = "0 30 11 * * MON-FRI")
     public void updateMarketCap() {
         log.info("시가총액 업데이트 시작 (안정성 모드)");
 
@@ -63,13 +63,17 @@ public class StockPriceScheduler {
                 // 3. API 호출
                 StockPrice price = lsClient.getCurrentPrice(company.getTicker());
 
-                // 4. 엄격한 검증 로직 (0값 및 null 방지)
-                if (price != null && price.getMarketCap() > 0) {
-                    // 성공 시 업데이트
-                    companyUpdateService.updatePrice(company.getTicker(), price.getMarketCap());
-                    log.info("성공: {} ({}억)", company.getTicker(), price.getMarketCap());
+                // 4. 현재가 기준으로 검증 (WebSocket 캐시는 marketCap=0으로 들어오므로 별도 처리)
+                if (price != null && price.getCurrentPrice() > 0) {
+                    companyUpdateService.updatePriceAndChangeRate(
+                            company.getTicker(),
+                            price.getCurrentPrice(),
+                            price.getChangeRate(),
+                            price.getMarketCap()
+                    );
+                    log.info("성공: {} ({}원, {}%, {}억)", company.getTicker(),
+                            price.getCurrentPrice(), price.getChangeRate(), price.getMarketCap());
                 } else {
-                    // 데이터가 0이거나 null인 경우 로그만 남기고 업데이트 스킵 (기존 값 보존)
                     log.warn("건너뜀: {} (데이터가 0이거나 부적절함)", company.getTicker());
                 }
 

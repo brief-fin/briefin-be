@@ -36,4 +36,10 @@ public interface CompaniesRepository extends JpaRepository<Companies, Long> {
     @Modifying
     @Query("UPDATE Companies c SET c.marketCap = :marketCap WHERE c.ticker = :ticker")
     void updateMarketCap(@Param("ticker") String ticker, @Param("marketCap") BigDecimal marketCap);
+
+    @Modifying
+    @Query("UPDATE Companies c SET c.sector = :sector, c.logoUrl = :logoUrl WHERE c.ticker = :ticker")
+    void updateSectorAndLogo(@Param("ticker") String ticker,
+                             @Param("sector") String sector,
+                             @Param("logoUrl") String logoUrl);
 }

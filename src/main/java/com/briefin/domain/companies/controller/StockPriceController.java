@@ -119,14 +119,72 @@ public class StockPriceController {
         for (SseEmitter emitter : new CopyOnWriteArrayList<>(emitters)) {
             try {
                 emitter.send(SseEmitter.event()
-                        .name("realtime-price")
-                        .data(new StockPrice(event.price(), event.diff(),event.marketPrice())));
+                        .name(event.ticker())
+                        .data(new StockPrice(event.price(), event.diff(), event.marketPrice())));
             } catch (Exception e) {
                 log.error("SSE 전송 실패: {}", e.getMessage());
                 emitter.complete();
                 emitters.remove(emitter);
             }
         }
+    }
+
+    @GetMapping(value = "/price/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamMultiplePrice(@RequestParam List<String> tickers) {
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+        for (String ticker : tickers) {
+            emitterMap.computeIfAbsent(ticker, k -> new CopyOnWriteArrayList<>()).add(emitter);
+        }
+
+        Runnable cleanup = () -> {
+            for (String ticker : tickers) {
+                List<SseEmitter> emitters = emitterMap.get(ticker);
+                if (emitters != null) {
+                    emitters.remove(emitter);
+                    if (emitters.isEmpty()) {
+                        emitterMap.remove(ticker);
+                        lsWebSocketClient.unsubscribe(ticker);
+                    }
+                }
+            }
+        };
+
+        emitter.onCompletion(cleanup);
+        emitter.onTimeout(() -> { cleanup.run(); emitter.complete(); });
+        emitter.onError(e -> { cleanup.run(); emitter.complete(); });
+
+        for (String ticker : tickers) {
+            try {
+                lsWebSocketClient.subscribe(ticker);
+
+                Companies company = companiesRepository.findByTicker(ticker).orElse(null);
+                long dbMarketCap = (company != null && company.getMarketCap() != null) ? company.getMarketCap().longValue() : 0;
+
+                StockPrice currentPrice = lsClient.getCurrentPrice(ticker);
+                if (currentPrice != null && currentPrice.getCurrentPrice() > 0) {
+                    StockPrice finalPrice = new StockPrice(
+                            currentPrice.getCurrentPrice(),
+                            currentPrice.getChangeRate(),
+                            currentPrice.getMarketCap() > 0 ? currentPrice.getMarketCap() : dbMarketCap
+                    );
+                    emitter.send(SseEmitter.event().name(ticker).data(finalPrice));
+                } else if (company != null && company.getCurrentPrice() != null) {
+                    emitter.send(SseEmitter.event().name(ticker).data(
+                            new StockPrice(
+                                    company.getCurrentPrice().doubleValue(),
+                                    company.getChangeRate() != null ? company.getChangeRate().doubleValue() : 0.0,
+                                    dbMarketCap
+                            )
+                    ));
+                }
+            } catch (Exception e) {
+                log.error("초기 데이터 전송 실패: {}", ticker);
+            }
+        }
+
+        log.info("검색 리스트 SSE 연결: {}개 종목 구독", tickers.size());
+        return emitter;
     }
 
     @GetMapping("/popular/diff")

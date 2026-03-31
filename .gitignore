@@ -42,5 +42,4 @@ out/
 .env
 ### Secrets ###
 application-test.yaml
-application.yml
-src/main/resources/application.yml
+

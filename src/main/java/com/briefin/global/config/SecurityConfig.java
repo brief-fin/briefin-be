@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/feeds/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/news").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/news/*/terms").permitAll()
                         .requestMatchers("/api/auth/**").permitAll().requestMatchers(
                                 "/api/home/**",
                                 "/api/disclosures/**",   // GET/POST 전부 허용

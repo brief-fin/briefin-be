@@ -57,6 +57,12 @@ public class NewsController {
         return ApiResponse.success(newsService.getNewsTimeline(id));
     }
 
+    @Operation(summary = "뉴스 경제 용어 해설 조회", description = "기사 본문에 등장하는 어려운 경제 용어와 설명을 반환")
+    @GetMapping("/{id}/terms")
+    public ApiResponse<List<TermExplanationDTO>> getTermExplanations(@PathVariable Long id) {
+        return ApiResponse.success(newsService.getTermExplanations(id));
+    }
+
     @Operation(summary = "뉴스 스크랩 등록")
     @PostMapping("/{id}/scrap")
     public ApiResponse<ScrapResponseDto> addScrap(

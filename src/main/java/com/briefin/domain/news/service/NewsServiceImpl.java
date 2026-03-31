@@ -34,6 +34,7 @@ public class NewsServiceImpl implements NewsService {
     private final NewsEmbeddingRepository newsEmbeddingRepository;
     private final NewsViewRepository newsViewRepository;
     private final ScrapsRepository scrapsRepository;
+    private final EconomicTermRepository economicTermRepository;
 
     @Override
     public NewsPageResponseDTO getNewsList(String category, int page, int size) {
@@ -163,6 +164,20 @@ public class NewsServiceImpl implements NewsService {
                 .toList();
 
         return new HomeNewsResponseDTO(domestic, foreign);
+    }
+
+    @Override
+    public List<TermExplanationDTO> getTermExplanations(Long newsId) {
+        News news = findNewsById(newsId);
+        String content = news.getContent();
+        if (content == null || content.isBlank()) {
+            return List.of();
+        }
+
+        return economicTermRepository.findAll().stream()
+                .filter(t -> content.contains(t.getTerm()))
+                .map(t -> new TermExplanationDTO(t.getTerm(), t.getExplanation(), t.getOriginalExplanation()))
+                .toList();
     }
 
     private News findNewsById(Long newsId) {

@@ -22,11 +22,13 @@ public class NewsController {
     private final NewsService newsService;
     private final ScrapsService scrapsService;
 
-    @Operation(summary = "뉴스 목록 조회", description = "category 미전달 시 전체 반환")
+    @Operation(summary = "뉴스 목록 조회", description = "category 미전달 시 전체 반환. 무한스크롤용 페이지네이션 지원")
     @GetMapping
-    public ApiResponse<List<NewsListResponseDTO>> getNewsList(
-            @RequestParam(required = false, defaultValue = "all") String category) {
-        return ApiResponse.success(newsService.getNewsList(category));
+    public ApiResponse<NewsPageResponseDTO> getNewsList(
+            @RequestParam(required = false, defaultValue = "all") String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(newsService.getNewsList(category, page, size));
     }
 
     @Operation(summary = "뉴스 상세 조회")
@@ -47,6 +49,12 @@ public class NewsController {
     @GetMapping("/{id}/related")
     public ApiResponse<List<NewsRelatedResponseDTO>> getRelatedNews(@PathVariable Long id) {
         return ApiResponse.success(newsService.getRelatedNews(id));
+    }
+
+    @Operation(summary = "뉴스 타임라인 조회", description = "해당 뉴스와 같은 기업의 관련 뉴스를 시간순으로 반환. isCurrent=true가 현재 기사")
+    @GetMapping("/{id}/timeline")
+    public ApiResponse<List<NewsTimelineItemDTO>> getNewsTimeline(@PathVariable Long id) {
+        return ApiResponse.success(newsService.getNewsTimeline(id));
     }
 
     @Operation(summary = "뉴스 스크랩 등록")

@@ -24,9 +24,8 @@ public class NewsEmbedding extends BaseEntity {
     private News news;
 
     // pgvector extension 필요: CREATE EXTENSION IF NOT EXISTS vector;
-    // vector(768) 타입은 float[] 로 매핑 후 pgvector 드라이버가 변환
     @JdbcTypeCode(SqlTypes.VECTOR)
-    @Array(length = 768)
+    @Array(length = 1024)
     @Column(columnDefinition = "vector(1024)")
     private float[] embedding;
 }

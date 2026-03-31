@@ -20,6 +20,7 @@ public class DisclosureSavedEventListener {
         try {
             webPushService.sendToSubscribers(
                     event.companyId(),
+                    event.disclosureId(),
                     event.companyName() + " 새 공시",
                     event.reportName()
             );

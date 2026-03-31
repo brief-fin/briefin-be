@@ -67,16 +67,19 @@ public class WebPushServiceImpl implements WebPushService {
     }
 
     @Override
-    public void sendToSubscribers(Long companyId, String title, String body) {
+    public void sendToSubscribers(Long companyId, Long disclosureId, String title, String body) {
         List<PushSubscription> subscribers = pushSubscriptionRepository.findByCompanyId(companyId);
         if (subscribers.isEmpty()) return;
 
         String payload;
         try {
-            payload = objectMapper.writeValueAsString(Map.of(
-                    "title", title,
-                    "body", body
-            ));
+            Map<String, Object> payloadMap = new java.util.HashMap<>();
+            payloadMap.put("title", title);
+            payloadMap.put("body", body);
+            if (disclosureId != null) {
+                payloadMap.put("disclosureId", disclosureId);
+            }
+            payload = objectMapper.writeValueAsString(payloadMap);
         } catch (Exception e) {
             log.error("푸시 payload 직렬화 실패: {}", e.getMessage());
             return;
@@ -91,7 +94,7 @@ public class WebPushServiceImpl implements WebPushService {
                         payload
                 );
                 pushService.send(notification);
-                log.info("푸시 발송 완료: companyId={}", companyId);
+                log.info("푸시 발송 완료: companyId={}, disclosureId={}", companyId, disclosureId);
             } catch (Exception e) {
                 log.error("푸시 발송 실패: endpoint={}, error={}", sub.getEndpoint(), e.getMessage());
             }

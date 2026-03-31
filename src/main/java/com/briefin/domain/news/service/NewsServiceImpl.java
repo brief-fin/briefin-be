@@ -4,6 +4,7 @@ import com.briefin.domain.news.converter.NewsConverter;
 import com.briefin.domain.news.dto.*;
 import com.briefin.domain.news.entity.*;
 import com.briefin.domain.news.repository.*;
+import com.briefin.domain.users.repository.ScrapsRepository;
 import com.briefin.global.apipayload.code.status.ErrorCode;
 import com.briefin.global.apipayload.exception.BriefinException;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,14 +33,17 @@ public class NewsServiceImpl implements NewsService {
     private final NewsCompanyRepository newsCompanyRepository;
     private final NewsEmbeddingRepository newsEmbeddingRepository;
     private final NewsViewRepository newsViewRepository;
+    private final ScrapsRepository scrapsRepository;
 
     @Override
-    public List<NewsListResponseDTO> getNewsList(String category) {
-        List<NewsSummary> summaries = (category == null || category.equals("all"))
-                ? newsSummaryRepository.findAllWithNews()
-                : newsSummaryRepository.findByCategoryWithNews(category);
+    public NewsPageResponseDTO getNewsList(String category, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("news.publishedAt").descending());
 
-        List<Long> newsIds = summaries.stream()
+        Page<NewsSummary> summaryPage = (category == null || category.equals("all"))
+                ? newsSummaryRepository.findAllWithNewsPage(pageable)
+                : newsSummaryRepository.findByCategoryWithNewsPage(category, pageable);
+
+        List<Long> newsIds = summaryPage.getContent().stream()
                 .map(ns -> ns.getNews().getId())
                 .toList();
 
@@ -45,13 +52,13 @@ public class NewsServiceImpl implements NewsService {
                 .stream()
                 .collect(Collectors.groupingBy(nc -> nc.getNews().getId()));
 
-        return summaries.stream()
-                .map(summary -> NewsConverter.toListDTO(
-                        summary.getNews(),
-                        summary,
-                        companiesMap.getOrDefault(summary.getNews().getId(), List.of())
-                ))
-                .toList();
+        Page<NewsListResponseDTO> dtoPage = summaryPage.map(summary -> NewsConverter.toListDTO(
+                summary.getNews(),
+                summary,
+                companiesMap.getOrDefault(summary.getNews().getId(), List.of())
+        ));
+
+        return NewsPageResponseDTO.from(dtoPage);
     }
 
     @Override
@@ -75,7 +82,9 @@ public class NewsServiceImpl implements NewsService {
                 .map(Object::toString)
                 .toList();
 
-        return NewsConverter.toDetailDTO(news, getSummary(newsId), getCompanies(newsId), relatedNewsIds);
+        boolean isScraped = userId != null && scrapsRepository.existsByUserIdAndNewsId(userId, newsId);
+
+        return NewsConverter.toDetailDTO(news, getSummary(newsId), getCompanies(newsId), relatedNewsIds, isScraped);
     }
 
     @Override
@@ -95,6 +104,40 @@ public class NewsServiceImpl implements NewsService {
                 .filter(newsMap::containsKey)
                 .map(id -> NewsConverter.toRelatedDTO(newsMap.get(id), getSummary(id)))
                 .toList();
+    }
+
+    @Override
+    public List<NewsTimelineItemDTO> getNewsTimeline(Long newsId) {
+        News current = findNewsById(newsId);
+        List<Long> timelineIds = newsEmbeddingRepository.findTimelineNewsIds(newsId, 20);
+
+        Map<Long, News> newsMap = newsRepository.findAllById(timelineIds).stream()
+                .collect(Collectors.toMap(News::getId, n -> n));
+
+        List<Long> allIds = new java.util.ArrayList<>(timelineIds);
+        allIds.add(newsId);
+        Map<Long, NewsSummary> summaryMap = newsSummaryRepository.findByNewsIdIn(allIds).stream()
+                .collect(Collectors.toMap(ns -> ns.getNews().getId(), ns -> ns));
+
+        List<NewsTimelineItemDTO> timeline = timelineIds.stream()
+                .filter(newsMap::containsKey)
+                .map(id -> NewsConverter.toTimelineItemDTO(newsMap.get(id), summaryMap.get(id), false))
+                .collect(Collectors.toList());
+
+        // 현재 기사를 날짜 순서에 맞는 위치에 삽입
+        NewsTimelineItemDTO currentItem = NewsConverter.toTimelineItemDTO(current, summaryMap.get(newsId), true);
+        int insertIndex = 0;
+        for (int i = 0; i < timeline.size(); i++) {
+            String timelineAt = timeline.get(i).publishedAt();
+            String currentAt = currentItem.publishedAt();
+            if (timelineAt != null && currentAt != null && timelineAt.compareTo(currentAt) > 0) {
+                break;
+            }
+            insertIndex = i + 1;
+        }
+        timeline.add(insertIndex, currentItem);
+
+        return timeline;
     }
 
     @Override

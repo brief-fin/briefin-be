@@ -22,11 +22,13 @@ public class NewsController {
     private final NewsService newsService;
     private final ScrapsService scrapsService;
 
-    @Operation(summary = "뉴스 목록 조회", description = "category 미전달 시 전체 반환")
+    @Operation(summary = "뉴스 목록 조회", description = "category 미전달 시 전체 반환. 무한스크롤용 페이지네이션 지원")
     @GetMapping
-    public ApiResponse<List<NewsListResponseDTO>> getNewsList(
-            @RequestParam(required = false, defaultValue = "all") String category) {
-        return ApiResponse.success(newsService.getNewsList(category));
+    public ApiResponse<NewsPageResponseDTO> getNewsList(
+            @RequestParam(required = false, defaultValue = "all") String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(newsService.getNewsList(category, page, size));
     }
 
     @Operation(summary = "뉴스 상세 조회")

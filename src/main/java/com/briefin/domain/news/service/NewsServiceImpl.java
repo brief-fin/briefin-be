@@ -12,7 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,12 +36,14 @@ public class NewsServiceImpl implements NewsService {
     private final ScrapsRepository scrapsRepository;
 
     @Override
-    public List<NewsListResponseDTO> getNewsList(String category) {
-        List<NewsSummary> summaries = (category == null || category.equals("all"))
-                ? newsSummaryRepository.findAllWithNews()
-                : newsSummaryRepository.findByCategoryWithNews(category);
+    public NewsPageResponseDTO getNewsList(String category, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("news.publishedAt").descending());
 
-        List<Long> newsIds = summaries.stream()
+        Page<NewsSummary> summaryPage = (category == null || category.equals("all"))
+                ? newsSummaryRepository.findAllWithNewsPage(pageable)
+                : newsSummaryRepository.findByCategoryWithNewsPage(category, pageable);
+
+        List<Long> newsIds = summaryPage.getContent().stream()
                 .map(ns -> ns.getNews().getId())
                 .toList();
 
@@ -47,13 +52,13 @@ public class NewsServiceImpl implements NewsService {
                 .stream()
                 .collect(Collectors.groupingBy(nc -> nc.getNews().getId()));
 
-        return summaries.stream()
-                .map(summary -> NewsConverter.toListDTO(
-                        summary.getNews(),
-                        summary,
-                        companiesMap.getOrDefault(summary.getNews().getId(), List.of())
-                ))
-                .toList();
+        Page<NewsListResponseDTO> dtoPage = summaryPage.map(summary -> NewsConverter.toListDTO(
+                summary.getNews(),
+                summary,
+                companiesMap.getOrDefault(summary.getNews().getId(), List.of())
+        ));
+
+        return NewsPageResponseDTO.from(dtoPage);
     }
 
     @Override

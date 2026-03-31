@@ -4,6 +4,8 @@ package com.briefin.domain.companies.controller;
 import com.briefin.domain.companies.dto.CompanyResponseDto;
 import com.briefin.domain.companies.service.CompaniesQueryService;
 import com.briefin.domain.companies.service.CompanyDataInitService;
+import com.briefin.domain.news.dto.NewsPageResponseDTO;
+import com.briefin.domain.news.service.NewsService;
 import com.briefin.global.apipayload.ApiResponse;
 import com.briefin.global.security.jwt.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,7 @@ public class CompaniesController {
 
     private final CompaniesQueryService companiesService;
     private final CompanyDataInitService companyDataInitService;
+    private final NewsService newsService;
 
     @GetMapping("/{id}")
     @Operation(summary = "기업 상세 조회", description = "특정 기업을 상세 조회합니다.")
@@ -52,6 +55,15 @@ public class CompaniesController {
     ) {
         Pageable pageable = PageRequest.of(page, size);
         return ApiResponse.success(companiesService.getSearchResultCompanies(q, pageable));
+    }
+
+    @GetMapping("/{id}/news")
+    @Operation(summary = "기업 관련 뉴스 조회", description = "특정 기업과 관련된 뉴스 목록을 페이지네이션으로 반환합니다.")
+    public ApiResponse<NewsPageResponseDTO> getCompanyNews(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(newsService.getNewsByCompany(id, page, size));
     }
 
     @PostMapping("/sync")

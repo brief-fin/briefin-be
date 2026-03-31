@@ -26,6 +26,7 @@ public class NewsConverter {
                 summary != null ? summary.getRegion() : null,
                 news.getSource(),
                 news.getPublishedAt() != null ? news.getPublishedAt().format(DATE_FORMATTER) : null,
+                news.getThumbnailUrl(),
                 toCompanyNames(companies)
         );
     }

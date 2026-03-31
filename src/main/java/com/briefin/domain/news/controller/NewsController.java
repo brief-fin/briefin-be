@@ -5,13 +5,13 @@ import com.briefin.domain.news.service.NewsService;
 import com.briefin.domain.users.service.ScrapsService;
 import com.briefin.global.apipayload.ApiResponse;
 import com.briefin.global.security.jwt.JwtUserInfo;
+import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/news")
@@ -41,8 +41,11 @@ public class NewsController {
 
     @Operation(summary = "키워드로 뉴스 검색")
     @GetMapping("/search")
-    public ApiResponse<List<NewsSearchResponseDTO>> searchNews(@RequestParam String q) {
-        return ApiResponse.success(newsService.searchNews(q));
+    public ApiResponse<NewsPageResponseDTO> searchNews(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(newsService.searchNews(q, page, size));
     }
 
     @Operation(summary = "관련 뉴스 목록 조회")

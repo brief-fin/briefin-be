@@ -89,10 +89,11 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
-    public List<NewsSearchResponseDTO> searchNews(String q) {
-        return newsRepository.searchByKeyword(q).stream()
-                .map(news -> NewsConverter.toSearchDTO(news, getSummary(news.getId()), getCompanies(news.getId())))
-                .toList();
+    public NewsPageResponseDTO searchNews(String q, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "publishedAt"));
+        Page<NewsListResponseDTO> result = newsRepository.searchByKeyword(q, pageable)
+                .map(news -> NewsConverter.toListDTO(news, getSummary(news.getId()), getCompanies(news.getId())));
+        return NewsPageResponseDTO.from(result);
     }
 
     @Override

@@ -13,7 +13,7 @@ public interface NewsService {
 
     NewsDetailResponseDTO getNewsDetail(Long newsId, UUID userId);
 
-    List<NewsSearchResponseDTO> searchNews(String q);
+    NewsPageResponseDTO searchNews(String q, int page, int size);
 
     List<NewsRelatedResponseDTO> getRelatedNews(Long newsId);
 

@@ -36,7 +36,7 @@ public class CompaniesController {
         UUID userId = null;
         try {
             userId = SecurityUtils.getCurrentUserId();
-        } catch (ClassCastException e) {
+        } catch (Exception e) {
             // 비로그인 상태 - userId null 유지
         }
         return ApiResponse.success(companiesService.getCompany(id, userId));

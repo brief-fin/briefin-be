@@ -1,5 +1,6 @@
 package com.briefin.domain.auth.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     private final AuthService authService;
@@ -41,9 +43,11 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request,
             HttpServletResponse response
     ) {
+        log.info("auth.login: email={}", request.email());
         LoginResult result = authService.login(request);
 
         CookieUtil.addRefreshTokenCookie(response, result.getRefreshToken());
+        log.info("auth.login: refresh cookie issued (token omitted)");
 
         LoginResponse body = LoginResponse.builder()
                 .accessToken(result.getAccessToken())
@@ -57,10 +61,12 @@ public class AuthController {
             HttpServletResponse response
     ) {
         String refreshToken = CookieUtil.getRefreshTokenFromCookie(request);
+        log.info("auth.refresh: entered, cookiePresent={}", refreshToken != null && !refreshToken.isBlank());
 
         RefreshTokenResult result = authService.refresh(refreshToken);
 
         CookieUtil.addRefreshTokenCookie(response, result.getRefreshToken());
+        log.info("auth.refresh: rotation success, refresh cookie updated (token omitted)");
 
         RefreshTokenResponse body = RefreshTokenResponse.builder()
                 .accessToken(result.getAccessToken())
@@ -74,9 +80,11 @@ public class AuthController {
             HttpServletResponse response
     ) {
         String refreshToken = CookieUtil.getRefreshTokenFromCookie(request);
+        log.info("auth.logout: entered, cookiePresent={}", refreshToken != null && !refreshToken.isBlank());
 
         authService.logout(refreshToken);
         CookieUtil.deleteRefreshTokenCookie(response);
+        log.info("auth.logout: redis deleted + cookie expired (token omitted)");
 
         return ResponseEntity.ok(ApiResponse.<Void>success(null));
     }

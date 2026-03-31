@@ -8,6 +8,7 @@ public interface
 WatchlistService {
     WatchlistResponseDto getWatchlist(UUID userId);
 
-    WatchlistResponseDto.WatchlistAddResponseDto addWatch(Long companyId, UUID userId);
+    /** 이미 관심 등록된 경우에도 예외 없이 성공(멱등). */
+    void addWatch(Long companyId, UUID userId);
     void removeWatch(Long companyId, UUID userId);
 }

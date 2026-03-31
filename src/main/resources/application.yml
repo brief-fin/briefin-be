@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: briefin-be
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: true
+    open-in-view: false
+    data:
+      redis:
+        host: ${REDIS_HOST:localhost}
+        port: ${REDIS_PORT:6379}
+        password: ${REDIS_PASSWORD:}
+        timeout: 3000ms
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 86400000
+  refresh-token-expiration: 604800000  # 7일
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.briefin: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+
+kis:
+  base-url: https://openapi.koreainvestment.com:9443
+  app-key: ${KIS_APP_KEY}
+  app-secret: ${KIS_APP_SECRET}
+
+dart:
+  api:
+    key: ${DART_API_KEY}
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+
+ls:
+  base-url: "https://openapi.ls-sec.co.kr:8080"
+  app-key: ${LS_APP_KEY}
+  app-secret-key: ${LS_APP_SECRET_KEY}
+
+vapid:
+  public-key: BHgnz9ZBZ_80NGqE6cbWRyrOwoYMlmZokAvJiJ0l8PXfEtAeHY4d81qPKb8s5qqMQDDIWxOFas1WvQB-sOBMuoc
+  private-key: ${VAPID_PRIVATE_KEY}
+  subject: https://github.com/brief-fin

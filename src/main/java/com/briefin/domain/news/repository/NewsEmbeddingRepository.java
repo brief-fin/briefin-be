@@ -22,23 +22,17 @@ public interface NewsEmbeddingRepository extends JpaRepository<NewsEmbedding, Lo
     List<Long> findRelatedNewsIds(@Param("newsId") Long newsId, @Param("limit") int limit);
 
     @Query(value = """
-            SELECT DISTINCT n.id
+            SELECT DISTINCT n.id, n.published_at
             FROM news n
             JOIN news_embeddings ne ON ne.news_id = n.id
-            JOIN news_embeddings target ON target.news_id = :newsId
             JOIN news_companies nc ON nc.news_id = n.id
-            JOIN news_companies target_nc ON target_nc.news_id = :newsId
-            LEFT JOIN news_summaries ns ON ns.news_id = n.id
-            LEFT JOIN news_summaries target_ns ON target_ns.news_id = :newsId
             WHERE n.id != :newsId
-              AND nc.company_id = target_nc.company_id
-              AND (
-                1 - (ne.embedding <=> target.embedding) >= 0.4
-                OR (
-                  1 - (ne.embedding <=> target.embedding) >= 0.2
-                  AND ns.category = target_ns.category
-                )
+              AND nc.company_id IN (
+                  SELECT company_id FROM news_companies WHERE news_id = :newsId
               )
+              AND ne.embedding <=> (
+                  SELECT embedding FROM news_embeddings WHERE news_id = :newsId LIMIT 1
+              ) <= 0.45
             ORDER BY n.published_at ASC
             LIMIT :limit
             """, nativeQuery = true)

@@ -130,7 +130,7 @@ public class NewsServiceImpl implements NewsService {
     @Override
     public List<NewsTimelineItemDTO> getNewsTimeline(Long newsId) {
         News current = findNewsById(newsId);
-        List<Long> timelineIds = newsEmbeddingRepository.findTimelineNewsIds(newsId, 20);
+        List<Long> timelineIds = newsEmbeddingRepository.findTimelineNewsIds(newsId, 10);
 
         Map<Long, News> newsMap = newsRepository.findAllById(timelineIds).stream()
                 .collect(Collectors.toMap(News::getId, n -> n));

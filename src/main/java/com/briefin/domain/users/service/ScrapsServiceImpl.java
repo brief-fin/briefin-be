@@ -53,6 +53,7 @@ public class ScrapsServiceImpl implements ScrapsService {
                         .title(scrap.getNews().getTitle())
                         .summary(summaryMap.get(scrap.getNews().getId()))
                         .source(scrap.getNews().getSource())
+                        .thumbnailUrl(scrap.getNews().getThumbnailUrl())
                         .scrapedAt(scrap.getCreatedAt())
                         .build())
                 .toList();

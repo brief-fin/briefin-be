@@ -65,6 +65,7 @@ public class UsersServiceImpl implements UsersService{
                         .title(view.getNews().getTitle())
                         .summary(summaryMap.get(view.getNews().getId()))
                         .source(view.getNews().getSource())
+                        .thumbnailUrl(view.getNews().getThumbnailUrl())
                         .viewedAt(view.getViewedAt())
                         .build())
                 .toList();

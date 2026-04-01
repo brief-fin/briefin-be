@@ -20,6 +20,7 @@ public class ScrapNewsResponseDto {
         private String title;
         private String summary;
         private String source;
+        private String thumbnailUrl;
         private LocalDateTime scrapedAt;
     }
 }

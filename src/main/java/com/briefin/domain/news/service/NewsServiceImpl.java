@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -143,9 +144,12 @@ public class NewsServiceImpl implements NewsService {
         List<NewsTimelineItemDTO> timeline = timelineIds.stream()
                 .filter(newsMap::containsKey)
                 .map(id -> NewsConverter.toTimelineItemDTO(newsMap.get(id), summaryMap.get(id), false))
+                .sorted(Comparator.comparing(
+                        dto -> dto.publishedAt() != null ? dto.publishedAt() : "",
+                        Comparator.naturalOrder()
+                ))
                 .collect(Collectors.toList());
 
-        // 현재 기사를 날짜 순서에 맞는 위치에 삽입
         NewsTimelineItemDTO currentItem = NewsConverter.toTimelineItemDTO(current, summaryMap.get(newsId), true);
         int insertIndex = 0;
         for (int i = 0; i < timeline.size(); i++) {

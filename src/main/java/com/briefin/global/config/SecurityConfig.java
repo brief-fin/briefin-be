@@ -35,13 +35,14 @@ public class SecurityConfig {
                 .formLogin(formLogin -> formLogin.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/feeds/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/news").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/news/*/terms").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll().requestMatchers(
+                        .requestMatchers(
                                 "/api/home/**",
-                                "/api/disclosures/**",   // GET/POST 전부 허용
+                                "/api/disclosures/**",
                                 "/api/companies/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -51,7 +52,6 @@ public class SecurityConfig {
                                 "/companies/**",
                                 "/webjars/**").permitAll()
                         .anyRequest().authenticated()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

@@ -101,8 +101,16 @@ public class DisclosuresController {
     @Operation(summary = "summaryDetail 일괄 업데이트", description = "기존 공시 중 summaryDetail 없는 건 GPT로 채움")
     @PostMapping("/fill-summary-detail")
     public ResponseEntity<ApiResponse<?>> fillSummaryDetail() {
-        disclosureCollectService.fillMissingSummaryDetail(); // 즉시 반환, 백그라운드 실행
+        disclosureCollectService.fillMissingSummaryDetail();
         return ResponseEntity.accepted()
                 .body(ApiResponse.success("summaryDetail 업데이트 시작됨 (백그라운드 실행 중)"));
+    }
+
+    @Operation(summary = "rawText 일괄 업데이트", description = "rawText 없는 공시를 DART에서 재수집 후 GPT 분석까지 채움 (PDF 포함)")
+    @PostMapping("/fill-raw-text")
+    public ResponseEntity<ApiResponse<?>> fillRawText() {
+        disclosureCollectService.fillMissingRawText();
+        return ResponseEntity.accepted()
+                .body(ApiResponse.success("rawText 업데이트 시작됨 (백그라운드 실행 중)"));
     }
 }

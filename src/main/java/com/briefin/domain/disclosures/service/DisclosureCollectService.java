@@ -5,4 +5,5 @@ public interface DisclosureCollectService {
     void collectAll(String startDate, String endDate);
     void collectByCorpCode(String corpCode, String startDate, String endDate);
     void fillMissingSummaryDetail();
+    void fillMissingRawText();
 }

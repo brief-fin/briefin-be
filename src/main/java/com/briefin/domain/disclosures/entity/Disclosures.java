@@ -63,4 +63,10 @@ public class Disclosures {
         this.summaryDetail = summaryDetail;
     }
 
+    public void updateRawTextAndSummaries(String rawText, String summary, String summaryDetail) {
+        this.rawText = rawText;
+        this.summary = summary;
+        this.summaryDetail = summaryDetail;
+    }
+
 }

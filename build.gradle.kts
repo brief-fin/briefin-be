@@ -46,6 +46,7 @@ dependencies {
 	implementation("me.paulschwarz:spring-dotenv:2.5.4")
 
 	implementation("org.jsoup:jsoup:1.17.2")
+	implementation("org.apache.pdfbox:pdfbox:3.0.3")
 	implementation("com.pgvector:pgvector:0.1.6")
 	implementation("org.hibernate.orm:hibernate-vector:6.6.13.Final")
 

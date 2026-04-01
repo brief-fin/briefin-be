@@ -200,6 +200,32 @@ public class NewsServiceImpl implements NewsService {
                 .toList();
     }
 
+    @Override
+    public NewsPageResponseDTO getNewsByCompany(Long companyId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, Math.min(size, 50));
+        Page<News> newsPage = newsCompanyRepository.findNewsByCompanyId(companyId, pageable);
+
+        List<Long> newsIds = newsPage.getContent().stream()
+                .map(News::getId)
+                .toList();
+
+        Map<Long, NewsSummary> summaryMap = newsIds.isEmpty() ? Map.of() :
+                newsSummaryRepository.findByNewsIdIn(newsIds).stream()
+                        .collect(Collectors.toMap(ns -> ns.getNews().getId(), ns -> ns));
+
+        Map<Long, List<NewsCompany>> companiesMap = newsIds.isEmpty() ? Map.of() :
+                newsCompanyRepository.findByNewsIdIn(newsIds).stream()
+                        .collect(Collectors.groupingBy(nc -> nc.getNews().getId()));
+
+        Page<NewsListResponseDTO> result = newsPage.map(news -> NewsConverter.toListDTO(
+                news,
+                summaryMap.get(news.getId()),
+                companiesMap.getOrDefault(news.getId(), List.of())
+        ));
+
+        return NewsPageResponseDTO.from(result);
+    }
+
     private News findNewsById(Long newsId) {
         return newsRepository.findById(newsId)
                 .orElseThrow(() -> new BriefinException(ErrorCode.NEWS_NOT_FOUND));

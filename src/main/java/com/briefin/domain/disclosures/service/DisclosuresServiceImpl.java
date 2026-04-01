@@ -49,6 +49,7 @@ public class DisclosuresServiceImpl implements DisclosuresService {
                 .summary(d.getSummary())
                 .keyPoints(parseKeyPoints(d.getSummaryDetail()))
                 .category(d.getCategory())
+                .sentiment(parseSentiment(d.getSummaryDetail()))
                 .build());
     }
 
@@ -72,6 +73,21 @@ public class DisclosuresServiceImpl implements DisclosuresService {
         parseSummaryDetail(disclosure.getSummaryDetail(), builder);
 
         return builder.build();
+    }
+
+    private String parseSentiment(String rawDetail) {
+        if (rawDetail == null || rawDetail.isBlank()) return null;
+        try {
+            String jsonStr = rawDetail.strip();
+            if (jsonStr.startsWith("```")) {
+                jsonStr = jsonStr.replaceAll("^```[a-zA-Z]*\\n?", "").replaceAll("```$", "").strip();
+            }
+            JsonNode node = objectMapper.readTree(jsonStr);
+            return node.has("sentiment") ? node.get("sentiment").asText(null) : null;
+        } catch (Exception e) {
+            log.warn("sentiment 파싱 실패: {}", e.getMessage());
+            return null;
+        }
     }
 
     private List<String> parseKeyPoints(String rawDetail) {

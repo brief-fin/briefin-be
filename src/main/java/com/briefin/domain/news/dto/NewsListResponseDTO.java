@@ -10,5 +10,6 @@ public record NewsListResponseDTO(
         String region,
         String press,
         String publishedAt,
+        String thumbnailUrl,
         List<String> relatedCompanies
 ) {}

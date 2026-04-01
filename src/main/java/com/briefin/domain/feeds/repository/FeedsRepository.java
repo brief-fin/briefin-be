@@ -19,6 +19,13 @@ public interface FeedsRepository extends JpaRepository<News, Long> {
             JOIN watchlist w ON nc.company_id = w.company_id
             WHERE w.user_id = CAST(:userId AS uuid)
             ORDER BY n.published_at DESC NULLS LAST
-            """, nativeQuery = true)
+            """,
+            countQuery = """
+            SELECT COUNT(DISTINCT n.id) FROM news n
+            JOIN news_companies nc ON n.id = nc.news_id
+            JOIN watchlist w ON nc.company_id = w.company_id
+            WHERE w.user_id = CAST(:userId AS uuid)
+            """,
+            nativeQuery = true)
     List<Long> findWatchlistFeed(@Param("userId") UUID userId, Pageable pageable);
 }

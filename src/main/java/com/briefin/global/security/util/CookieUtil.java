@@ -17,9 +17,9 @@ public class CookieUtil {
         // - 개발(localhost)에서는 Secure=false + SameSite=Lax로 충분(동일 site). HTTPS 운영에선 Secure=true + SameSite=None 권장.
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
-                .sameSite("Lax")
+                .sameSite("None")
                 .maxAge(14 * 24 * 60 * 60)
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());
@@ -28,9 +28,9 @@ public class CookieUtil {
     public static void deleteRefreshTokenCookie(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false)
+                .secure(true)
                 .path("/")
-                .sameSite("Lax")
+                .sameSite("None")
                 .maxAge(0)
                 .build();
         response.addHeader("Set-Cookie", cookie.toString());

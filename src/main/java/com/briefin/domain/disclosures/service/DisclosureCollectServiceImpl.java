@@ -89,6 +89,29 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
 
     @Async
     @Override
+    public void fillMissingRawText() {
+        List<Disclosures> targets = disclosuresRepository.findByRawTextNullOrEmpty();
+        log.info("rawText 미설정 공시: {}건", targets.size());
+
+        for (Disclosures disclosure : targets) {
+            try {
+                String rawText = dartApiClient.fetchDisclosureText(disclosure.getDartId());
+                if (rawText == null || rawText.isBlank()) {
+                    log.warn("rawText 추출 실패 (빈 결과): {}", disclosure.getDartId());
+                    continue;
+                }
+                String summary = chatGptClient.summarize(rawText);
+                String summaryDetail = chatGptClient.summarizeDetail(rawText);
+                disclosureSaveService.updateRawTextAndSummaries(disclosure.getId(), rawText, summary, summaryDetail);
+                log.info("rawText 업데이트 완료: {}", disclosure.getDartId());
+            } catch (Exception e) {
+                log.error("rawText 업데이트 실패: {} - {}", disclosure.getDartId(), e.getMessage());
+            }
+        }
+    }
+
+    @Async
+    @Override
     public void fillMissingSummaryDetail() {
         List<Disclosures> targets = disclosuresRepository.findBySummaryDetailIsNull();
         log.info("summaryDetail 미설정 공시: {}건", targets.size());

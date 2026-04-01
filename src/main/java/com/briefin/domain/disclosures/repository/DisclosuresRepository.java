@@ -23,4 +23,7 @@ public interface DisclosuresRepository extends JpaRepository<Disclosures, Long> 
     boolean existsByDartId(String dartId);
 
     List<Disclosures> findBySummaryDetailIsNull();
+
+    @org.springframework.data.jpa.repository.Query("SELECT d FROM Disclosures d WHERE d.rawText IS NULL OR d.rawText = ''")
+    List<Disclosures> findByRawTextNullOrEmpty();
 }

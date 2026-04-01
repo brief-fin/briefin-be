@@ -6,6 +6,9 @@ import com.briefin.domain.disclosures.dto.DartListResponseDTO;
 import com.briefin.domain.disclosures.dto.DisclosureItem;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.Parser;
@@ -164,17 +167,23 @@ public class DartApiClient {
                 while ((entry = zis.getNextEntry()) != null) {
                     String name = entry.getName().toLowerCase();
                     log.debug("원문 ZIP 파일: {} ({})", name, rceptNo);
+                    byte[] entryBytes = zis.readAllBytes();
                     if (name.endsWith(".html") || name.endsWith(".htm") || name.endsWith(".xml")) {
-                        byte[] entryBytes = zis.readAllBytes();
-                        Document doc = name.endsWith(".xml")
-                                ? Jsoup.parse(new ByteArrayInputStream(entryBytes), null, rceptNo, Parser.xmlParser())
-                                : Jsoup.parse(new ByteArrayInputStream(entryBytes), null, rceptNo);
+                        Document doc = Jsoup.parse(new ByteArrayInputStream(entryBytes), "UTF-8", rceptNo);
                         doc.select("script, style").remove();
-                        String body = doc.body() != null
-                                ? doc.body().text().strip()
-                                : doc.text().strip();
-                        if (!body.isBlank()) {
-                            text.append(body).append("\n");
+                        String bodyText = doc.body() != null ? doc.body().text().strip() : "";
+                        String extracted = bodyText.isBlank() ? doc.text().strip() : bodyText;
+                        if (!extracted.isBlank()) {
+                            text.append(extracted).append("\n");
+                        }
+                    } else if (name.endsWith(".pdf")) {
+                        try (PDDocument pdf = Loader.loadPDF(entryBytes)) {
+                            String pdfText = new PDFTextStripper().getText(pdf).strip();
+                            if (!pdfText.isBlank()) {
+                                text.append(pdfText).append("\n");
+                            }
+                        } catch (Exception e) {
+                            log.warn("PDF 파싱 실패: {} ({})", name, rceptNo);
                         }
                     }
                 }

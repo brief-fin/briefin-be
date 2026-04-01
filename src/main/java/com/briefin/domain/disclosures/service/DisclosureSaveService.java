@@ -51,4 +51,12 @@ public class DisclosureSaveService {
         );
     }
 
+    @Transactional
+    public void updateRawTextAndSummaries(Long id, String rawText, String summary, String summaryDetail) {
+        disclosuresRepository.findById(id).ifPresentOrElse(
+                d -> d.updateRawTextAndSummaries(rawText, summary, summaryDetail),
+                () -> log.warn("rawText 업데이트 대상 공시 미존재: id={}", id)
+        );
+    }
+
 }

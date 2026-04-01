@@ -1,6 +1,7 @@
 package com.briefin.domain.pushSubscription.controller;
 
 import com.briefin.domain.pushSubscription.dto.PushSubscriptionRequestDTO;
+import com.briefin.domain.pushSubscription.dto.SubscribedCompanyResponse;
 import com.briefin.domain.pushSubscription.service.WebPushService;
 import com.briefin.global.apipayload.ApiResponse;
 import com.briefin.global.security.jwt.JwtUserInfo;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -56,6 +58,15 @@ public class PushSubscriptionController {
         UUID userId = jwtUserInfo.userId();
         webPushService.unsubscribe(userId, companyId);
         return ResponseEntity.ok(ApiResponse.success("구독 취소 완료"));
+    }
+
+    @Operation(summary = "구독 기업 목록 조회", description = "로그인 유저가 알림 신청한 기업 목록 반환 (기업 ID, 이름, 로고)")
+    @GetMapping("/subscriptions")
+    public ResponseEntity<ApiResponse<List<SubscribedCompanyResponse>>> getSubscribedCompanies(
+            @AuthenticationPrincipal JwtUserInfo jwtUserInfo
+    ) {
+        List<SubscribedCompanyResponse> result = webPushService.getSubscribedCompanies(jwtUserInfo.userId());
+        return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     @Operation(summary = "푸시 구독 여부 조회", description = "특정 기업 공시 알림 구독 여부 조회")

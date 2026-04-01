@@ -51,6 +51,7 @@ public class SecurityConfig {
                                 "/companies/**",
                                 "/webjars/**").permitAll()
                         .anyRequest().authenticated()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

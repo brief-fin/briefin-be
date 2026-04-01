@@ -21,6 +21,7 @@ public class DisclosuresResponseDTO {
         private String summary;
         private List<String> keyPoints;
         private String category;
+        private String sentiment;           // "호재" | "악재" | "중립" (분석 미완료 시 null)
     }
 
     @Getter

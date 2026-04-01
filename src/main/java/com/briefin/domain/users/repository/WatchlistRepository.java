@@ -17,8 +17,9 @@ public interface WatchlistRepository extends JpaRepository<Watchlist, Long> {
     @Query("SELECT w FROM Watchlist w JOIN FETCH w.company WHERE w.user.id = :userId ORDER BY w.createdAt DESC")
     List<Watchlist> findByUserIdWithCompany(UUID userId);
 
-    boolean existsByUserIdAndCompanyId(UUID userId, Long companyId);
-    Optional<Watchlist> findByUserIdAndCompanyId(UUID userId, Long companyId);
+    boolean existsByUser_IdAndCompany_Id(UUID userId, Long companyId);
+
+    Optional<Watchlist> findByUser_IdAndCompany_Id(UUID userId, Long companyId);
 
     @Modifying
     @Query("DELETE FROM Watchlist w WHERE w.user.id = :userId")

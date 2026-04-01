@@ -13,7 +13,7 @@ public interface NewsService {
 
     NewsDetailResponseDTO getNewsDetail(Long newsId, UUID userId);
 
-    List<NewsSearchResponseDTO> searchNews(String q);
+    NewsPageResponseDTO searchNews(String q, int page, int size);
 
     List<NewsRelatedResponseDTO> getRelatedNews(Long newsId);
 
@@ -22,4 +22,6 @@ public interface NewsService {
     HomeNewsResponseDTO getHomeNews();
 
     List<TermExplanationDTO> getTermExplanations(Long newsId);
+
+    NewsPageResponseDTO getNewsByCompany(Long companyId, int page, int size);
 }

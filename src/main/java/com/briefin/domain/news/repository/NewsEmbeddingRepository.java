@@ -15,7 +15,9 @@ public interface NewsEmbeddingRepository extends JpaRepository<NewsEmbedding, Lo
             SELECT ne.news_id
             FROM news_embeddings ne
             JOIN news_embeddings target ON target.news_id = :newsId
+            JOIN news n ON n.id = ne.news_id
             WHERE ne.news_id != :newsId
+              AND n.published_at >= NOW() - INTERVAL '2 days'
             ORDER BY ne.embedding <=> target.embedding
             LIMIT :limit
             """, nativeQuery = true)

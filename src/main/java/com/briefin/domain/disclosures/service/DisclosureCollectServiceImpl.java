@@ -40,6 +40,16 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
 
     @Async("disclosureCollectExecutor")
     @Override
+    public void collectAllThenFill(String startDate, String endDate) {
+        List<DisclosureItem> items = dartApiClient.fetchAllDisclosures(startDate, endDate);
+        log.info("전체 공시 수집 시작: {}건", items.size());
+        saveDisclosures(items);
+        log.info("수집 완료 — rawText 보완 시작");
+        fillMissingRawTextInternal();
+    }
+
+    @Async("disclosureCollectExecutor")
+    @Override
     public void collectByCorpCode(String corpCode, String startDate, String endDate) {
         List<DisclosureItem> items = dartApiClient.fetchDisclosuresByCorpCode(corpCode, startDate, endDate);
         log.info("기업별 공시 수집 시작 - corpCode: {}, {}건", corpCode, items.size());
@@ -92,6 +102,10 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
     @Async
     @Override
     public void fillMissingRawText() {
+        fillMissingRawTextInternal();
+    }
+
+    private void fillMissingRawTextInternal() {
         List<Disclosures> targets = disclosuresRepository.findByRawTextNullOrEmpty();
         log.info("rawText 미설정 공시: {}건", targets.size());
 

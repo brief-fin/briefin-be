@@ -24,4 +24,15 @@ public interface NewsCompanyRepository extends JpaRepository<NewsCompany, Long> 
            countQuery = "SELECT COUNT(*) FROM news_companies WHERE company_id = :companyId",
            nativeQuery = true)
     Page<News> findNewsByCompanyId(@Param("companyId") Long companyId, Pageable pageable);
+
+    @Query(value = """
+            SELECT n.* FROM news n
+            JOIN news_companies nc ON nc.news_id = n.id
+            JOIN news_summaries ns ON ns.news_id = n.id
+            WHERE nc.company_id = :companyId
+              AND ns.category = '기업이벤트'
+            ORDER BY n.published_at DESC
+            LIMIT 30
+            """, nativeQuery = true)
+    List<News> findEventNewsByCompanyId(@Param("companyId") Long companyId);
 }

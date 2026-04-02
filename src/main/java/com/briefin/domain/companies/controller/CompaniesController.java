@@ -2,6 +2,7 @@ package com.briefin.domain.companies.controller;
 
 
 import com.briefin.domain.companies.dto.CompanyResponseDto;
+import com.briefin.domain.companies.dto.CompanyTimelineItemDTO;
 import com.briefin.domain.companies.service.CompaniesQueryService;
 import com.briefin.domain.companies.service.CompanyDataInitService;
 import com.briefin.domain.news.dto.NewsPageResponseDTO;
@@ -64,6 +65,12 @@ public class CompaniesController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ApiResponse.success(newsService.getNewsByCompany(id, page, size));
+    }
+
+    @GetMapping("/{id}/timeline")
+    @Operation(summary = "기업 타임라인 조회", description = "공시 + 기업이벤트 뉴스를 날짜순으로 반환합니다.")
+    public ApiResponse<List<CompanyTimelineItemDTO>> getCompanyTimeline(@PathVariable Long id) {
+        return ApiResponse.success(companiesService.getCompanyTimeline(id));
     }
 
     @PostMapping("/sync")

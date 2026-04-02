@@ -66,36 +66,27 @@ public class DisclosuresController {
         }
     }
 
-    @Operation(summary = "전체 공시 수집", description = "startDate ~ endDate 기간의 전체 공시 수집 (형식: yyyyMMdd)")
+    @Operation(summary = "전체 공시 수집", description = "startDate ~ endDate 기간의 전체 공시 수집 (형식: yyyyMMdd) — 백그라운드 실행")
     @PostMapping("/collect")
     public ResponseEntity<ApiResponse<?>> collectDisclosures(
             @RequestParam String startDate,
             @RequestParam String endDate
     ) {
-        try {
-            disclosureCollectService.collectAll(startDate, endDate);
-            return ResponseEntity.ok(ApiResponse.success("공시 수집 완료"));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error(ErrorCode.INTERNAL_SERVER_ERROR));
-        }
+        disclosureCollectService.collectAll(startDate, endDate);
+        return ResponseEntity.accepted()
+                .body(ApiResponse.success("공시 수집이 시작되었습니다 (백그라운드 실행 중)"));
     }
 
-
-    @Operation(summary = "기업별 공시 수집", description = "특정 기업 코드(corpCode)의 startDate ~ endDate 기간 공시 수집 (형식: yyyyMMdd)")
+    @Operation(summary = "기업별 공시 수집", description = "특정 기업 코드(corpCode)의 startDate ~ endDate 기간 공시 수집 (형식: yyyyMMdd) — 백그라운드 실행")
     @PostMapping("/collect/{corpCode}")
     public ResponseEntity<ApiResponse<?>> collectByCorpCode(
             @PathVariable String corpCode,
             @RequestParam String startDate,
             @RequestParam String endDate
     ) {
-        try {
-            disclosureCollectService.collectByCorpCode(corpCode, startDate, endDate);
-            return ResponseEntity.ok(ApiResponse.success("기업별 공시 수집 완료"));
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error(ErrorCode.INTERNAL_SERVER_ERROR));
-        }
+        disclosureCollectService.collectByCorpCode(corpCode, startDate, endDate);
+        return ResponseEntity.accepted()
+                .body(ApiResponse.success("기업별 공시 수집이 시작되었습니다 (백그라운드 실행 중)"));
     }
 
     @Operation(summary = "summaryDetail 일괄 업데이트", description = "기존 공시 중 summaryDetail 없는 건 GPT로 채움")

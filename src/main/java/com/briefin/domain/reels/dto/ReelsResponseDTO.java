@@ -9,5 +9,6 @@ public record ReelsResponseDTO(
         String category,
         String press,
         String publishedAt,
-        List<String> relatedCompanies
+        List<String> relatedCompanies,
+        String thumbnailUrl
 ) {}

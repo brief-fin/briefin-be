@@ -12,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -22,7 +24,7 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
     private final ChatGptClient chatGptClient;
     private final DisclosuresRepository disclosuresRepository;
     private final CompaniesRepository companiesRepository;
-    private final DisclosureSaveService disclosureSaveService; // 추가
+    private final DisclosureSaveService disclosureSaveService;
 
     @Override
     public void syncCorpCodes() throws Exception {
@@ -58,40 +60,36 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
 
     private void saveDisclosures(List<DisclosureItem> items) {
         for (DisclosureItem item : items) {
-
-            // 첨부정정 공시 스킵 (첨부파일만 존재 — 본문 텍스트 추출 불가)
             if (item.getReport_nm() != null && item.getReport_nm().startsWith("[첨부정정]")) {
                 log.debug("첨부정정 공시 스킵: {}", item.getReport_nm());
                 continue;
             }
 
-            // 최적화용 선체크 (TOCTOU 완전 방지는 아님 — catch로 보완)
             if (disclosuresRepository.existsByDartId(item.getRcept_no())) {
                 log.debug("이미 존재하는 공시 스킵: {}", item.getRcept_no());
                 continue;
             }
 
-            Companies company = companiesRepository.findByCorpCode(item.getCorp_code())
-                    .orElse(null);
-
+            Companies company = companiesRepository.findByCorpCode(item.getCorp_code()).orElse(null);
             if (company == null) {
                 log.debug("등록되지 않은 기업 스킵: {}", item.getCorp_name());
                 continue;
             }
 
             try {
-                // 원격 호출 (트랜잭션 밖)
                 String rawText = dartApiClient.fetchDisclosureText(item.getRcept_no());
+                if (rawText == null || rawText.isBlank()) {
+                    log.warn("원문 추출 실패로 저장 보류: {} - {}", item.getRcept_no(), item.getReport_nm());
+                    continue;
+                }
+
                 String summary = chatGptClient.summarize(rawText);
-                String summaryDetail = chatGptClient.summarizeDetail(rawText);
+                String summaryDetail = safeSummarizeDetail(item.getRcept_no(), rawText);
 
-                // 별도 서비스로 트랜잭션 보장
                 disclosureSaveService.save(company, item, rawText, summary, summaryDetail);
-
                 log.info("공시 저장 완료: {} - {}", item.getCorp_name(), item.getReport_nm());
 
             } catch (DataIntegrityViolationException e) {
-                // 동시 실행으로 인한 중복 저장 시도 — 정상 케이스로 처리
                 log.debug("중복 공시 스킵 (race condition): {}", item.getRcept_no());
             } catch (Exception e) {
                 log.error("공시 처리 실패: {} - {}", item.getRcept_no(), e.getMessage());
@@ -116,8 +114,9 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
                     log.warn("rawText 추출 실패 (빈 결과): {}", disclosure.getDartId());
                     continue;
                 }
+
                 String summary = chatGptClient.summarize(rawText);
-                String summaryDetail = chatGptClient.summarizeDetail(rawText);
+                String summaryDetail = safeSummarizeDetail(disclosure.getDartId(), rawText);
                 disclosureSaveService.updateRawTextAndSummaries(disclosure.getId(), rawText, summary, summaryDetail);
                 log.info("rawText 업데이트 완료: {}", disclosure.getDartId());
             } catch (Exception e) {
@@ -140,6 +139,15 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
             } catch (Exception e) {
                 log.error("summaryDetail 업데이트 실패: {} - {}", disclosure.getDartId(), e.getMessage());
             }
+        }
+    }
+
+    private String safeSummarizeDetail(String dartId, String rawText) {
+        try {
+            return chatGptClient.summarizeDetail(rawText);
+        } catch (Exception e) {
+            log.warn("상세 요약 실패, 기본 요약만 유지: {} - {}", dartId, e.getMessage());
+            return null;
         }
     }
 }

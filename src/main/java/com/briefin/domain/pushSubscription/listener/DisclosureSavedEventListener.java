@@ -4,6 +4,7 @@ import com.briefin.domain.disclosures.event.DisclosureSavedEvent;
 import com.briefin.domain.pushSubscription.service.WebPushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -15,6 +16,7 @@ public class DisclosureSavedEventListener {
 
     private final WebPushService webPushService;
 
+    @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleDisclosureSaved(DisclosureSavedEvent event) {
         try {

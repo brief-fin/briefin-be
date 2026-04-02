@@ -30,6 +30,7 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
         log.info("corp_code 동기화 완료");
     }
 
+    @Async("disclosureCollectExecutor")
     @Override
     public void collectAll(String startDate, String endDate) {
         List<DisclosureItem> items = dartApiClient.fetchAllDisclosures(startDate, endDate);
@@ -37,6 +38,7 @@ public class DisclosureCollectServiceImpl implements DisclosureCollectService {
         saveDisclosures(items);
     }
 
+    @Async("disclosureCollectExecutor")
     @Override
     public void collectByCorpCode(String corpCode, String startDate, String endDate) {
         List<DisclosureItem> items = dartApiClient.fetchDisclosuresByCorpCode(corpCode, startDate, endDate);

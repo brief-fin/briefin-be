@@ -63,7 +63,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
                 "https://briefin.site",
-                "https://www.briefin.site"
+                "https://www.briefin.site",
+                "https://api.briefin.site"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

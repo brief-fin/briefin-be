@@ -1,5 +1,8 @@
 package com.briefin.domain.pushSubscription.service;
 
+import com.briefin.domain.companies.entity.Companies;
+import com.briefin.domain.companies.repository.CompaniesRepository;
+import com.briefin.domain.pushSubscription.dto.SubscribedCompanyResponse;
 import com.briefin.domain.pushSubscription.entity.PushSubscription;
 import com.briefin.domain.pushSubscription.repository.PushSubscriptionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +20,7 @@ import java.security.Security;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,6 +37,7 @@ public class WebPushServiceImpl implements WebPushService {
     private String vapidSubject;
 
     private final PushSubscriptionRepository pushSubscriptionRepository;
+    private final CompaniesRepository companiesRepository;
     private final ObjectMapper objectMapper;
     private PushService pushService;
 
@@ -104,5 +109,13 @@ public class WebPushServiceImpl implements WebPushService {
     @Override
     public boolean isSubscribed(UUID userId, Long companyId) {
         return pushSubscriptionRepository.existsByUserIdAndCompanyId(userId, companyId);
+    }
+
+    @Override
+    public List<SubscribedCompanyResponse> getSubscribedCompanies(UUID userId) {
+        List<Long> companyIds = pushSubscriptionRepository.findDistinctCompanyIdsByUserId(userId);
+        return companiesRepository.findAllById(companyIds).stream()
+                .map(c -> new SubscribedCompanyResponse(c.getId(), c.getName(), c.getTicker()))
+                .collect(Collectors.toList());
     }
 }

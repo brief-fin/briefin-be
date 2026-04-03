@@ -18,13 +18,8 @@ public interface ReelsRepository extends JpaRepository<News, Long> {
     @Query(value = """
             WITH source_news AS (
                 SELECT news_id FROM (
-                    SELECT news_id FROM scraps WHERE user_id = CAST(:userId AS uuid)
-                    ORDER BY created_at DESC LIMIT 20
-                ) s
-                UNION ALL
-                SELECT news_id FROM (
                     SELECT news_id FROM news_views WHERE user_id = CAST(:userId AS uuid)
-                    ORDER BY viewed_at DESC LIMIT 10
+                    ORDER BY viewed_at DESC LIMIT 25
                 ) v
                 UNION ALL
                 SELECT news_id FROM (
@@ -35,8 +30,13 @@ public interface ReelsRepository extends JpaRepository<News, Long> {
                     WHERE w.user_id = CAST(:userId AS uuid)
                     GROUP BY nc.news_id, n.published_at
                     ORDER BY n.published_at DESC NULLS LAST
-                    LIMIT 10
+                    LIMIT 15
                 ) wl
+                UNION ALL
+                SELECT news_id FROM (
+                    SELECT news_id FROM scraps WHERE user_id = CAST(:userId AS uuid)
+                    ORDER BY created_at DESC LIMIT 10
+                ) s
             ),
             user_vector AS (
                 SELECT AVG(ne.embedding) AS vec
